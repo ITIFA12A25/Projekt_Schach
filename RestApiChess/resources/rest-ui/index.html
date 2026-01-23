@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>API Explorer</title>
+
+<style>
+body { font-family: sans-serif; margin: 20px; }
+.endpoint {
+    border: 1px solid #ccc;
+    padding: 12px;
+    margin-bottom: 12px;
+    border-radius: 6px;
+}
+.method {
+    font-weight: bold;
+    margin-right: 10px;
+}
+.tryout-btn {
+    margin-top: 8px;
+    padding: 6px 10px;
+    cursor: pointer;
+}
+.hidden {
+    display: none;
+}
+.param-field {
+    margin: 4px 0;
+}
+textarea {
+    width: 100%;
+    height: 120px;
+}
+#response {
+    white-space: pre;
+    background: #f5f5f5;
+    padding: 10px;
+    border: 1px solid #ddd;
+    margin-top: 20px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>API Explorer</h1>
+
+<div id="endpoints">Loading endpoints…</div>
+
+<h2>Response</h2>
+<pre id="response">Click an endpoint to test it</pre>
+
+<script>
+async function loadOpenAPI() {
+    const container = document.getElementById("endpoints");
+    const responseBox = document.getElementById("response");
+
+    try {
+        const res = await fetch("/openapi.json");
+        const api = await res.json();
+
+        container.innerHTML = "";
+
+        const paths = api.paths || {};
+        const schemas = api.components?.schemas || {};
+
+        for (const path in paths) {
+            const methods = paths[path];
+
+            for (const method in methods) {
+                const info = methods[method];
+
+                const card = document.createElement("div");
+                card.className = "endpoint";
+
+                const tryoutId = "tryout_" + Math.random().toString(36).substring(2);
+
+                card.innerHTML = `
+                    <div>
+                        <span class="method">${method.toUpperCase()}</span>
+                        <span>${path}</span>
+                    </div>
+                    <div>${info.summary || ""}</div>
+
+                    <button class="tryout-btn" onclick="toggleTryout('${tryoutId}')">
+                        Try out
+                    </button>
+
+                    <div id="${tryoutId}" class="hidden">
+                        <h4>Parameters</h4>
+                        <div class="params"></div>
+
+                        <h4>Request Body</h4>
+                        <textarea class="body-input"></textarea>
+
+                        <button class="tryout-btn" onclick="sendRequest('${method}', '${path}', '${tryoutId}')">
+                            Send Request
+                        </button>
+                    </div>
+                `;
+
+                container.appendChild(card);
+
+                const tryoutDiv = card.querySelector(`#${tryoutId}`);
+                const paramsDiv = tryoutDiv.querySelector(".params");
+                const bodyInput = tryoutDiv.querySelector(".body-input");
+
+                // Query parameters from OpenAPI
+                if (info.parameters && info.parameters.length > 0) {
+                    info.parameters.forEach(p => {
+                        if (p.in === "query") {
+                            paramsDiv.innerHTML += `
+                                <div class="param-field">
+                                    <label>${p.name} (${p.schema?.type || "string"}${p.required ? ", required" : ""}):
+                                        <input type="text" data-param="${p.name}">
+                                    </label>
+                                </div>
+                            `;
+                        }
+                    });
+                } else {
+                    paramsDiv.innerHTML = "<i>No query parameters</i>";
+                }
+
+                // Request body schema
+                if (info.requestBody && info.requestBody.content && info.requestBody.content["application/json"]) {
+                    const schema = info.requestBody.content["application/json"].schema;
+                    if (schema["$ref"]) {
+                        const schemaName = schema["$ref"].split("/").pop();
+                        const s = schemas[schemaName];
+                        if (s && s.properties) {
+                            const example = {};
+                            for (const key in s.properties) {
+                                example[key] = "";
+                            }
+                            bodyInput.value = JSON.stringify(example, null, 2);
+                        }
+                    }
+                } else {
+                    bodyInput.value = "";
+                }
+            }
+        }
+    } catch (err) {
+        container.textContent = "Failed to load /openapi.json: " + err;
+    }
+}
+
+function toggleTryout(id) {
+    const el = document.getElementById(id);
+    el.classList.toggle("hidden");
+}
+
+async function sendRequest(method, path, tryoutId) {
+    const tryoutDiv = document.getElementById(tryoutId);
+    const responseBox = document.getElementById("response");
+
+    const params = tryoutDiv.querySelectorAll("[data-param]");
+    let url = path;
+
+    if (params.length > 0) {
+        const q = new URLSearchParams();
+        params.forEach(p => {
+            if (p.value.trim() !== "") q.append(p.dataset.param, p.value);
+        });
+        const qs = q.toString();
+        if (qs) url += "?" + qs;
+    }
+
+    let body = null;
+    const bodyInput = tryoutDiv.querySelector(".body-input");
+    if (bodyInput && bodyInput.value.trim() !== "") {
+        body = bodyInput.value;
+    }
+
+    responseBox.textContent = "Loading…";
+
+    try {
+        const res = await fetch(url, {
+            method: method.toUpperCase(),
+            headers: { "Content-Type": "application/json" },
+            body: method.toLowerCase() !== "get" ? body : undefined
+        });
+
+        const text = await res.text();
+        try {
+            responseBox.textContent = JSON.stringify(JSON.parse(text), null, 2);
+        } catch {
+            responseBox.textContent = text;
+        }
+    } catch (err) {
+        responseBox.textContent = "Error: " + err;
+    }
+}
+
+loadOpenAPI();
+</script>
+
+</body>
+</html>
