@@ -1,0 +1,5 @@
+spieler_nr; spiel_nr; farbe; ergebniss
+1;1001;weis;gewonnen
+2;1001;schwarz;verloren
+2;1002;weis;remie
+3;1002;schwarz;remie
