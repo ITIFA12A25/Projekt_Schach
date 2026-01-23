@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/rest-ui">
+        <file alias="index.html">resources/rest-ui/index.html</file>
+    </qresource>
+</RCC>
