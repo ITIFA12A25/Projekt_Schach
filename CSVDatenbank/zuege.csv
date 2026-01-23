@@ -1,0 +1,5 @@
+ID_zug; spiel__nr; zugNr; farbe; zug
+1;1001;1;weis;e4
+2;1001;1;schwarz;c5
+3;1001;2;weis;Nf3
+4;1001;2;schwarz;d6
