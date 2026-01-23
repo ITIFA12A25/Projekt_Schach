@@ -1,7 +1,7 @@
 #ifndef MATCHMAKINGSERVICE_H
 #define MATCHMAKINGSERVICE_H
 
-#include "IPlayer.h"
+#include "Player.h"
 #include "Game.h"
 #include <QQueue>
 #include <QMap>
@@ -11,14 +11,14 @@ public:
     MatchmakingService();
     static MatchmakingService *getInstance(void);
 
-    Game *enqueuePlayer(IPlayer *player);
+    Game *enqueuePlayer(Player *player);
     void cancelSearch(int playerId);
     Game *getGame(int gameId) const;
 
 private:
     static MatchmakingService *instance;
 
-    QQueue<IPlayer*> waiting;
+    QQueue<Player*> waiting;
     QMap<int, Game*> games;
     int nextGameId = 1;
 };

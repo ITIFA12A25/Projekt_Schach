@@ -6,7 +6,7 @@ using namespace std;
 
 class IPlayer {
 public:
-    virtual ~IPlayer() = default;
+    IPlayer() = default;
     virtual bool isWhite() const = 0;
     virtual int getId() const = 0;
     virtual QString getName() const = 0;

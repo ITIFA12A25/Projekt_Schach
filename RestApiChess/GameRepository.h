@@ -2,7 +2,7 @@
 #define GAMEREPOSITORY_H
 
 #include "Game.h"
-#include "HumanPlayer.h"
+#include "Player.h"
 #include "Persistence.h"
 #include <QVector>
 #include <QString>
@@ -14,7 +14,7 @@ public:
 
     void addGame(Game *game);
     void saveAll(const QString &filePath);
-    void loadAll(const QString &filePath, const QVector<HumanPlayer*> &players);
+    void loadAll(const QString &filePath, const QVector<Player*> &players);
 
     QVector<const Game*> gamesForPlayer(int playerId) const;
     const Game *getGame(int gameId) const;

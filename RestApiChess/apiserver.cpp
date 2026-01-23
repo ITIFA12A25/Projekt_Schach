@@ -4,17 +4,17 @@
 
 ApiServer::ApiServer() {
     // Load players
-    QVector<HumanPlayer*> loadedPlayers;
+    QVector<Player*> loadedPlayers;
     if (!Persistence::loadPlayers(loadedPlayers, "players.json")) {
         // fallback: create some defaults
-        loadedPlayers.append(new HumanPlayer(1, "Alice", true));
-        loadedPlayers.append(new HumanPlayer(2, "Bob", false));
+        loadedPlayers.append(new Player(1, "Alice", true));
+        loadedPlayers.append(new Player(2, "Bob", false));
     }
     for (auto p : loadedPlayers) {
         players.insert(p->getId(), p);
     }
     // Load games
-    QVector<HumanPlayer*> playerVec = loadedPlayers;
+    QVector<Player*> playerVec = loadedPlayers;
     gameRepo->loadAll("games.json", playerVec);
 }
 

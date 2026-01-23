@@ -18,6 +18,7 @@ SOURCES += \
         MatchmakingService.cpp \
         Pawn.cpp \
         Persistence.cpp \
+        Player.cpp \
         Queen.cpp \
         Rook.cpp \
         UserService.cpp \
@@ -36,8 +37,6 @@ HEADERS += \
     Game.h \
     GameRepository.h \
     GameStatus.h \
-    HumanPlayer.h \
-    IPlayer.h \
     King.h \
     Knight.h \
     MatchmakingService.h \
@@ -46,6 +45,7 @@ HEADERS += \
     Pawn.h \
     Persistence.h \
     Piece.h \
+    Player.h \
     Position.h \
     Queen.h \
     Rook.h \

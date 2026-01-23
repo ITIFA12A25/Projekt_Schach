@@ -2,8 +2,7 @@
 #define USERSERVICE_H
 
 #include "Persistence.h"
-#include "IPlayer.h"
-#include "HumanPlayer.h"
+#include "Player.h"
 #include <QString>
 #include <QVector>
 
@@ -13,16 +12,16 @@ public:
     UserService();
     static UserService *getInstance(void);
 
-    HumanPlayer* getPlayer(QString &playerName);
-    void savePlayer(HumanPlayer *currentPlayer);
-    void deletePlayer(HumanPlayer *currentPlayer);
-    void registerPlayer(HumanPlayer *newPlayer);
+    Player* getPlayer(QString &playerName);
+    void savePlayer(Player *currentPlayer);
+    void deletePlayer(Player *currentPlayer);
+    void registerPlayer(Player *newPlayer);
 
 private:
     static UserService *instance;
     Persistence *persistence = Persistence::getInstance();
 
-    IPlayer *player = nullptr;
+    Player *player = nullptr;
 };
 
 #endif // USERSERVICE_H

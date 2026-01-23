@@ -24,7 +24,7 @@ using namespace std;
 #include "GameRepository.h"
 #include "UserService.h"
 #include "MoveValidator.h"
-#include "HumanPlayer.h"
+#include "Player.h"
 
 #define SCHEME "http"
 #define HOST "127.0.0.1"
@@ -84,6 +84,6 @@ private:
     UserService *userService = UserService::getInstance();
     MoveValidator moveValidator;
     // For demo: simple in-memory players
-    QMap<int, HumanPlayer*> players;
+    QMap<int, Player*> players;
 };
 #endif // APISERVER_H

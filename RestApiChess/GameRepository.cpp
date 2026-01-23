@@ -21,7 +21,7 @@ void GameRepository::saveAll(const QString &filePath) {
     persistance->saveGames(games, filePath);
 }
 
-void GameRepository::loadAll(const QString &filePath, const QVector<HumanPlayer*> &players) {
+void GameRepository::loadAll(const QString &filePath, const QVector<Player*> &players) {
     QVector<Game*> loaded;
     persistance->loadGames(loaded, players, filePath);
     games = loaded;

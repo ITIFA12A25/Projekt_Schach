@@ -11,9 +11,9 @@ UserService* UserService::getInstance()
     return instance;
 }
 
-HumanPlayer* UserService::getPlayer(QString &playerName){
-    QList<HumanPlayer*> players;
-    HumanPlayer* searchPlayer = nullptr;
+Player* UserService::getPlayer(QString &playerName){
+    QList<Player*> players;
+    Player* searchPlayer = nullptr;
     persistence->loadPlayers(players, "players.json");
 
     foreach (auto p, players) {
@@ -23,8 +23,8 @@ HumanPlayer* UserService::getPlayer(QString &playerName){
     return searchPlayer;
 }
 
-void UserService::savePlayer(HumanPlayer *currentPlayer){
-    QList<HumanPlayer*> players;
+void UserService::savePlayer(Player *currentPlayer){
+    QList<Player*> players;
     persistence->loadPlayers(players, "players.json");
 
     foreach (auto p, players) {
@@ -34,14 +34,14 @@ void UserService::savePlayer(HumanPlayer *currentPlayer){
     persistence->savePlayers(players,"players.json");
 }
 
-void UserService::deletePlayer(HumanPlayer *currentPlayer){
-    QList<HumanPlayer*> players;
+void UserService::deletePlayer(Player *currentPlayer){
+    QList<Player*> players;
     persistence->loadPlayers(players, "players.json");
 
             players.removeOne(currentPlayer);
     persistence->savePlayers(players,"players.json");
 }
 
-void UserService::registerPlayer(HumanPlayer *newPlayer){
+void UserService::registerPlayer(Player *newPlayer){
 
 }

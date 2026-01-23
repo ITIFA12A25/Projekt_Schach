@@ -13,7 +13,7 @@ Persistence* Persistence::getInstance()
     return instance;
 }
 
-bool Persistence::savePlayers(const QVector<HumanPlayer*> &players, const QString &filePath) {
+bool Persistence::savePlayers(const QVector<Player*> &players, const QString &filePath) {
     QJsonArray arr;
     for (auto p : players) {
         QJsonObject o;
@@ -29,7 +29,7 @@ bool Persistence::savePlayers(const QVector<HumanPlayer*> &players, const QStrin
     return true;
 }
 
-bool Persistence::loadPlayers(QVector<HumanPlayer*> &players, const QString &filePath) {
+bool Persistence::loadPlayers(QVector<Player*> &players, const QString &filePath) {
     QFile f(filePath);
     if (!f.open(QIODevice::ReadOnly)) return false;
     QJsonDocument doc = QJsonDocument::fromJson(f.readAll());
@@ -40,7 +40,7 @@ bool Persistence::loadPlayers(QVector<HumanPlayer*> &players, const QString &fil
         int id = o["id"].toInt();
         QString name = o["name"].toString();
         bool white = o["white"].toBool();
-        players.append(new HumanPlayer(id, name, white));
+        players.append(new Player(id, name, white));
     }
     return true;
 }
@@ -76,8 +76,8 @@ bool Persistence::saveGames(const QVector<Game*> &games, const QString &filePath
     return true;
 }
 
-bool Persistence::loadGames(QVector<Game*> &games, const QVector<HumanPlayer*> &players, const QString &filePath) {
-    auto findPlayer = [&](int id) -> HumanPlayer* {
+bool Persistence::loadGames(QVector<Game*> &games, const QVector<Player*> &players, const QString &filePath) {
+    auto findPlayer = [&](int id) -> Player* {
         for (auto p : players) if (p->getId() == id) return p;
         return nullptr;
     };

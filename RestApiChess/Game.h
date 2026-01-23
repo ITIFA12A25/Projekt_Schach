@@ -4,19 +4,19 @@
 #include "Board.h"
 #include "GameStatus.h"
 #include "Move.h"
-#include "IPlayer.h"
+#include "Player.h"
 #include <QVector>
 
 class Game {
 public:
-    Game(int id, IPlayer *p1, IPlayer *p2);
+    Game(int id, Player *p1, Player *p2);
 
     int id() const { return gameId; }
     const Board &board() const { return gameBoard; }
     Board &board() { return gameBoard; }
 
-    IPlayer *firstPlayer() const { return first; }
-    IPlayer *secondPlayer() const { return second; }
+    Player *firstPlayer() const { return first; }
+    Player *secondPlayer() const { return second; }
 
     bool isFirstPlayersTurn() const { return firstTurn; }
     GameStatus status() const { return gameStatus; }
@@ -28,8 +28,8 @@ public:
 private:
     int gameId;
     Board gameBoard;
-    IPlayer *first;
-    IPlayer *second;
+    Player *first;
+    Player *second;
     bool firstTurn = true;
     GameStatus gameStatus = GameStatus::InProgress;
     QVector<Move> gameMoves;

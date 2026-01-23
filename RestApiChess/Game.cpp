@@ -1,6 +1,6 @@
 #include "Game.h"
 
-Game::Game(int id, IPlayer *p1, IPlayer *p2)
+Game::Game(int id, Player *p1, Player *p2)
     : gameId(id), first(p1), second(p2) {}
 
 bool Game::applyMove(const Move &move, QString &error) {

@@ -1,5 +1,5 @@
 #include "MatchmakingService.h"
-#include "HumanPlayer.h"
+#include "Player.h"
 
 MatchmakingService* MatchmakingService::instance = nullptr;
 
@@ -14,12 +14,12 @@ MatchmakingService* MatchmakingService::getInstance()
     return instance;
 }
 
-Game *MatchmakingService::enqueuePlayer(IPlayer *player) {
+Game *MatchmakingService::enqueuePlayer(Player *player) {
     if (!waiting.isEmpty()) {
-        IPlayer *other = waiting.dequeue();
+        Player *other = waiting.dequeue();
         // assign colors arbitrarily
-        IPlayer *white = player;
-        IPlayer *black = other;
+        Player *white = player;
+        Player *black = other;
         // In real code, you'd construct players with color; here we assume they already have it.
 
         int id = nextGameId++;
@@ -33,9 +33,9 @@ Game *MatchmakingService::enqueuePlayer(IPlayer *player) {
 }
 
 void MatchmakingService::cancelSearch(int playerId) {
-    QQueue<IPlayer*> tmp;
+    QQueue<Player*> tmp;
     while (!waiting.isEmpty()) {
-        IPlayer *p = waiting.dequeue();
+        Player *p = waiting.dequeue();
         if (p->getId() != playerId)
             tmp.enqueue(p);
     }
