@@ -2,6 +2,8 @@
 #define MATCHMAKINGSERVICE_H
 
 #include "Player.h"
+#include "GameRepository.h"
+#include "UserService.h"
 #include "Game.h"
 #include <QQueue>
 #include <QMap>
@@ -18,6 +20,8 @@ public:
 private:
     static MatchmakingService *instance;
 
+    GameRepository *gameRepo = GameRepository::getInstance();
+    UserService *userService = UserService::getInstance();
     QQueue<Player*> waiting;
     QMap<int, Game*> games;
     int nextGameId = 1;

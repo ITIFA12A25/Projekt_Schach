@@ -20,11 +20,14 @@ Game *MatchmakingService::enqueuePlayer(Player *player) {
         // assign colors arbitrarily
         Player *white = player;
         Player *black = other;
-        // In real code, you'd construct players with color; here we assume they already have it.
 
-        int id = nextGameId++;
+        int id = gameRepo->newGameId();
         Game *game = new Game(id, white, black);
-        games.insert(id, game);
+
+        gameRepo->loadAll(userService->getPlayers());
+        gameRepo->addGame(game);
+        gameRepo->saveAll();
+
         return game;
     } else {
         waiting.enqueue(player);
@@ -40,8 +43,4 @@ void MatchmakingService::cancelSearch(int playerId) {
             tmp.enqueue(p);
     }
     waiting = tmp;
-}
-
-Game *MatchmakingService::getGame(int gameId) const {
-    return games.value(gameId, nullptr);
 }
