@@ -2,21 +2,7 @@
 #include <QFile>
 #include <QDebug>
 
-ApiServer::ApiServer() {
-    // Load players
-    QVector<Player*> loadedPlayers;
-    if (!Persistence::loadPlayers(loadedPlayers, "players.json")) {
-        // fallback: create some defaults
-        loadedPlayers.append(new Player(1, "Alice", true));
-        loadedPlayers.append(new Player(2, "Bob", false));
-    }
-    for (auto p : loadedPlayers) {
-        players.insert(p->getId(), p);
-    }
-    // Load games
-    QVector<Player*> playerVec = loadedPlayers;
-    gameRepo->loadAll("games.json", playerVec);
-}
+ApiServer::ApiServer() {}
 
 ApiServer* ApiServer::instance = nullptr;
 
@@ -40,11 +26,10 @@ void ApiServer::Start(QCoreApplication &app) {
     setupRoutes();
     qDebug() << "Routes registered:" << routeList.size();
 
-    setServer();
+    setServer(app);
     qDebug() << "HTTP server started.";
 
-    qDebug() << "Top-level resources:" << QDir(":/").entryList();
-    qDebug() << "Inside /rest-ui:" << QDir(":/rest-ui").entryList();
+    qDebug().noquote() << "REST API Endpoint Docs:\t" << "http://" + hostName.toString() + ":" + QString::number(portArg) + "/rest-ui";
     // On shutdown call:
     // gameRepo->saveAll("games.json");
     // Persistence::savePlayers(playerVec, "players.json");
@@ -134,16 +119,18 @@ void ApiServer::setupRoutes() {
 
     registerRoute("POST", "/api/matchmaking/search", "Enqueue player for matchmaking",
         [this](const QHttpServerRequest &req) {
-            QJsonParseError err;
-            QJsonDocument doc = QJsonDocument::fromJson(req.body(), &err);
-            if (err.error != QJsonParseError::NoError || !doc.isObject()) {
-                return QHttpServerResponse("application/json",
-                                           R"({"error":"Invalid JSON"})",
-                                           QHttpServerResponse::StatusCode::BadRequest);
+            QUrlQuery q(req.url().query());
+            bool ok = false;
+            int playerId = q.queryItemValue("playerId").toInt(&ok);
+            if (!ok) {
+                return QHttpServerResponse("application/json", R"({"error":"Player ID missing"})", QHttpServerResponse::StatusCode::BadRequest);
             }
 
-            int playerId = doc["playerId"].toInt();
-            auto player = players.value(playerId, nullptr);
+
+            QList<Player*> players;
+            Player *player =userService->getPlayer(playerId);
+            qDebug() << player;
+
             if (!player) {
                 return QHttpServerResponse("application/json",
                                            R"({"error":"Unknown player"})",
@@ -157,7 +144,7 @@ void ApiServer::setupRoutes() {
             }
 
             QJsonObject json;
-            json["status"] = "matched";
+            json["status"] = gameStatusToString(GameStatus::InProgress);
             json["gameId"] = game->id();
             json["whitePlayerId"] = game->firstPlayer()->getId();
             json["blackPlayerId"] = game->secondPlayer()->getId();
@@ -165,21 +152,27 @@ void ApiServer::setupRoutes() {
             return QHttpServerResponse("application/json",
                                        QJsonDocument(json).toJson());
         },
-        "MatchmakingRequest",
-        "MatchmakingResponse"
+        {},
+        "MatchmakingResponse",
+        { {"playerId","integer",true}}
         );
 
     //
     // ────────────────────────────────────────────────────────────────
-    //  GAME LISTING
+    //  GAME HANDELING
     // ────────────────────────────────────────────────────────────────
     //
 
     registerRoute("GET", "/api/games", "List games for a player",
         [this](const QHttpServerRequest &req) {
             QUrlQuery q(req.url().query());
-            int playerId = q.queryItemValue("playerId").toInt();
+            bool ok = false;
+            int playerId = q.queryItemValue("playerId").toInt(&ok);
+            if (!ok) {
+                return QHttpServerResponse("application/json", R"({"error":"Player ID missing"})", QHttpServerResponse::StatusCode::BadRequest);
+            }
 
+            gameRepo->loadAll(userService->getPlayers());
             auto games = gameRepo->gamesForPlayer(playerId);
             QJsonArray arr;
 
@@ -187,8 +180,26 @@ void ApiServer::setupRoutes() {
                 QJsonObject o;
                 o["gameId"] = g->id();
                 o["status"] = (int)g->status();
+                o["statusText"] = gameStatusToString(g->status());
                 o["firstPlayerId"] = g->firstPlayer()->getId();
                 o["secondPlayerId"] = g->secondPlayer()->getId();
+                o["firstPlayersTurn"] = g->isFirstPlayersTurn();
+                o["moveCount"] = g->moves().size();
+                o["isFinished"] = (g->status() != GameStatus::InProgress);
+
+                QJsonArray moves;
+                for (const auto &m : g->moves()) {
+                    QJsonObject mo;
+                    mo["fromX"] = m.from.x;
+                    mo["fromY"] = m.from.y;
+                    mo["toX"] = m.to.x;
+                    mo["toY"] = m.to.y;
+                    mo["resign"] = m.resign;
+                    mo["drawOffer"] = m.drawOffer;
+                    moves.append(mo);
+                }
+                o["moves"] = moves;
+
                 arr.append(o);
             }
 
@@ -198,26 +209,24 @@ void ApiServer::setupRoutes() {
             return QHttpServerResponse("application/json",
                                        QJsonDocument(root).toJson());
         },
-        {},
-        "GameSummary"
+        {}, // no request schema
+        "GameListResponse", // response schema
+        { {"playerId","integer",true} } // query param schema
         );
-
-    //
-    // ────────────────────────────────────────────────────────────────
-    //  GAME REPLAY
-    // ────────────────────────────────────────────────────────────────
-    //
 
     registerRoute("GET", "/api/games/replay", "Get replay moves for a game",
         [this](const QHttpServerRequest &req) {
             QUrlQuery q(req.url().query());
-            int gameId = q.queryItemValue("gameId").toInt();
+            bool ok = false;
+            int gameId = q.queryItemValue("gameId").toInt(&ok);
+            if (!ok) {
+                return QHttpServerResponse("application/json", R"({"error":"Game ID missing"})", QHttpServerResponse::StatusCode::BadRequest);
+            }
 
             const Game *game = gameRepo->getGame(gameId);
+
             if (!game) {
-                return QHttpServerResponse("application/json",
-                                           R"({"error":"Game not found"})",
-                                           QHttpServerResponse::StatusCode::NotFound);
+                return QHttpServerResponse("application/json", R"({"error":"Game not found"})", QHttpServerResponse::StatusCode::NotFound);
             }
 
             QJsonArray movesArr;
@@ -238,14 +247,57 @@ void ApiServer::setupRoutes() {
 
             return QHttpServerResponse("application/json",
                                        QJsonDocument(root).toJson());
-        }
-        );
+        },
+        {}, // no request schema
+        "GameReplayResponse", // response schema
+        { {"gameId","integer",true} } // query param schema
+    );
 
-    //
-    // ────────────────────────────────────────────────────────────────
-    //  MOVE SUBMISSION
-    // ────────────────────────────────────────────────────────────────
-    //
+    registerRoute("POST", "/api/games/register", "Register a new game",
+        [this](const QHttpServerRequest &req) {
+            QUrlQuery q(req.url().query());
+            bool ok1 = false;
+            bool ok2 = false;
+            int firstPlayerId = q.queryItemValue("firstPlayerId").toInt(&ok1);
+            int secondPlayerId = q.queryItemValue("secondPlayerId").toInt(&ok2);
+
+            if (!ok1 || !ok2) {
+                return QHttpServerResponse("application/json", R"({"error":"Player ID missing"})", QHttpServerResponse::StatusCode::BadRequest);
+            }
+
+            auto p1 = userService->getPlayer(firstPlayerId);
+            auto p2 = userService->getPlayer(secondPlayerId);
+
+            if (!p1 || !p2) {
+                return QHttpServerResponse("application/json", R"({"error":"Unknown player(s)\"})", QHttpServerResponse::StatusCode::BadRequest);
+            }
+
+            // Determine next game ID
+            int nextId = 1;
+            for (auto g : gameRepo->allGames()) {
+                if (g->id() >= nextId)
+                    nextId = g->id() + 1;
+            }
+
+            // Create game
+            Game *game = new Game(nextId, p1, p2);
+            gameRepo->addGame(game);
+            gameRepo->saveAll();
+
+            // Response
+            QJsonObject resp;
+            resp["gameId"] = game->id();
+            resp["firstPlayerId"] = firstPlayerId;
+            resp["secondPlayerId"] = secondPlayerId;
+            resp["status"] = (int)game->status();
+
+            return QHttpServerResponse("application/json",
+                                       QJsonDocument(resp).toJson());
+        },
+        {},
+        "RegisterGameResponse",
+        { {"firstPlayerId","string",true}, {"secondPlayerId","string",true} }
+    );
 
     registerRoute("POST", "/api/games/move", "Submit move for validation",
         [this](const QHttpServerRequest &req) {
@@ -261,33 +313,109 @@ void ApiServer::setupRoutes() {
             int gameId = o["gameId"].toInt();
             int playerId = o["playerId"].toInt();
 
-            Game *game = matchmaking->getGame(gameId);
+            gameRepo->loadAll(userService->getPlayers());
+            Game *game = gameRepo->getGame(gameId);
             if (!game) {
                 return QHttpServerResponse("application/json",
                                            R"({"error":"Game not found"})",
                                            QHttpServerResponse::StatusCode::NotFound);
             }
 
+            // 1. Check if player belongs to this game
+            if (playerId != game->firstPlayer()->getId() &&
+                playerId != game->secondPlayer()->getId()) {
+                return QHttpServerResponse("application/json",
+                                           R"({"error":"Player not part of this game"})",
+                                           QHttpServerResponse::StatusCode::BadRequest);
+            }
+
+            // 2. Check if it is the player's turn
+            bool isFirstPlayersTurn = game->isFirstPlayersTurn();
+            int expectedPlayerId = isFirstPlayersTurn
+                                       ? game->firstPlayer()->getId()
+                                       : game->secondPlayer()->getId();
+
+            if (playerId != expectedPlayerId) {
+                return QHttpServerResponse("application/json",
+                                           R"({"error":"Not your turn"})",
+                                           QHttpServerResponse::StatusCode::BadRequest);
+            }
+
+            // 3. Build move
             Move move;
             move.from = { o["fromX"].toInt(), o["fromY"].toInt() };
             move.to   = { o["toX"].toInt(),   o["toY"].toInt() };
             move.resign = o["resign"].toBool(false);
             move.drawOffer = o["drawOffer"].toBool(false);
 
+            // 4. Validate + apply move
             QString error;
             bool ok = moveValidator.validateAndApply(*game, move, error);
 
             QJsonObject resp;
             resp["valid"] = ok;
-            if (!ok) resp["error"] = error;
+
+            if (!ok) {
+                resp["error"] = error;
+                return QHttpServerResponse("application/json",
+                                           QJsonDocument(resp).toJson());
+            }
+
+            // 5. Save updated game state
+            gameRepo->saveAll();
+
             resp["status"] = (int)game->status();
+            resp["statusText"] = gameStatusToString(game->status());
 
             return QHttpServerResponse("application/json",
                                        QJsonDocument(resp).toJson());
         },
         "MoveRequest",
         "MoveResponse"
-        );
+    );
+
+
+    //
+    // ────────────────────────────────────────────────────────────────
+    //  USER HANDELING
+    // ────────────────────────────────────────────────────────────────
+    //
+
+    registerRoute("POST", "/api/players/register", "Register a new player",
+                  [this](const QHttpServerRequest &req) {
+                      QUrlQuery q(req.url().query());
+
+                      string newPlayerName = q.queryItemValue("name").toStdString();
+
+                      if (newPlayerName.empty()) {
+                          return QHttpServerResponse("application/json", R"({"error":"New player name"})", QHttpServerResponse::StatusCode::BadRequest);
+                      }
+
+                      QString name = QString::fromStdString(newPlayerName);
+
+                      if (name.isEmpty()) {
+                          return QHttpServerResponse("application/json",
+                                                     R"({"error":"Missing 'name'"})",
+                                                     QHttpServerResponse::StatusCode::BadRequest);
+                      }
+
+                      // Call your service
+                      userService->registerPlayer(&name);
+
+                      Player* created = userService->getPlayer(name);
+
+                      QJsonObject resp;
+                      resp["id"] = created->getId();
+                      resp["name"] = created->getName();
+                      resp["white"] = created->isWhite();
+
+                      return QHttpServerResponse("application/json", QJsonDocument(resp).toJson());
+                  },
+                  {},
+                  "RegisterPlayerResponse",
+                  { {"name","string",true} }
+                  );
+
 
     //
     // ────────────────────────────────────────────────────────────────
@@ -444,27 +572,6 @@ void ApiServer::setupSchemas(){
                                {"required", QJsonArray{"fromX","fromY","toX","toY"}}
                            });
 
-    // Game summary schema
-    registerSchema("GameSummary", QJsonObject{
-                                      {"type", "object"},
-                                      {"properties", QJsonObject{
-                                                         {"gameId", QJsonObject{{"type", "integer"}}},
-                                                         {"status", QJsonObject{{"type", "integer"}}},
-                                                         {"firstPlayerId", QJsonObject{{"type", "integer"}}},
-                                                         {"secondPlayerId", QJsonObject{{"type", "integer"}}}
-                                                     }},
-                                      {"required", QJsonArray{"gameId","status","firstPlayerId","secondPlayerId"}}
-                                  });
-
-    // Matchmaking request
-    registerSchema("MatchmakingRequest", QJsonObject{
-                                             {"type", "object"},
-                                             {"properties", QJsonObject{
-                                                                {"playerId", QJsonObject{{"type", "integer"}}}
-                                                            }},
-                                             {"required", QJsonArray{"playerId"}}
-                                         });
-
     // Matchmaking response
     registerSchema("MatchmakingResponse", QJsonObject{
                                               {"type", "object"},
@@ -501,6 +608,67 @@ void ApiServer::setupSchemas(){
                                                           {"status", QJsonObject{{"type", "integer"}}}
                                                       }}
                                    });
+
+    // Player registration response
+    registerSchema("RegisterPlayerResponse", QJsonObject{
+                                                 {"type", "object"},
+                                                 {"properties", QJsonObject{
+                                                                    {"id", QJsonObject{{"type", "integer"}}},
+                                                                    {"name", QJsonObject{{"type", "string"}}},
+                                                                    {"white", QJsonObject{{"type", "boolean"}}}
+                                                                }},
+                                                 {"required", QJsonArray{"id","name","white"}}
+                                             });
+
+    // Game List Response
+    registerSchema("GameListResponse", QJsonObject{
+                                           {"type", "object"},
+                                           {"properties", QJsonObject{
+                                                              {"games", QJsonObject{
+                                                                            {"type", "array"},
+                                                                            {"items", QJsonObject{{"$ref", "#/components/schemas/GameSummary"}}}
+                                                                        }}
+                                                          }},
+                                           {"required", QJsonArray{"games"}}
+                                       });
+
+    // Game Replay Response
+    registerSchema("GameReplayResponse", QJsonObject{
+                                             {"type", "object"},
+                                             {"properties", QJsonObject{
+                                                                {"gameId", QJsonObject{{"type", "integer"}}},
+                                                                {"moves", QJsonObject{
+                                                                              {"type", "array"},
+                                                                              {"items", QJsonObject{{"$ref", "#/components/schemas/Move"}}}
+                                                                          }}
+                                                            }},
+                                             {"required", QJsonArray{"gameId","moves"}}
+                                         });
+
+    // Game summary schema
+    registerSchema("GameSummary", QJsonObject{
+                                      {"type", "object"},
+                                      {"properties", QJsonObject{
+                                                         {"gameId", QJsonObject{{"type", "integer"}}},
+                                                         {"status", QJsonObject{{"type", "integer"}}},
+                                                         {"statusText", QJsonObject{{"type", "string"}}},
+                                                         {"firstPlayerId", QJsonObject{{"type", "integer"}}},
+                                                         {"secondPlayerId", QJsonObject{{"type", "integer"}}}
+                                                     }},
+                                      {"required", QJsonArray{"gameId","status","statusText","firstPlayerId","secondPlayerId"}}
+                                  });
+
+    // Register game response
+    registerSchema("RegisterGameResponse", QJsonObject{
+                                               {"type", "object"},
+                                               {"properties", QJsonObject{
+                                                                  {"gameId", QJsonObject{{"type", "integer"}}},
+                                                                  {"firstPlayerId", QJsonObject{{"type", "integer"}}},
+                                                                  {"secondPlayerId", QJsonObject{{"type", "integer"}}},
+                                                                  {"status", QJsonObject{{"type", "integer"}}}
+                                                              }},
+                                               {"required", QJsonArray{"gameId","firstPlayerId","secondPlayerId","status"}}
+                                           });
 }
 
 void ApiServer::getServerPort(QCoreApplication &app) {
@@ -515,7 +683,17 @@ void ApiServer::getServerPort(QCoreApplication &app) {
                   : parser.value("port").toUShort();
 }
 
-void ApiServer::setServer() {
-    tcpServer.listen(QHostAddress::Any, portArg);
+void ApiServer::setServer(QCoreApplication &app) {
+    parser.addOptions({
+                       {"host", "The host the server listens on.", "host"},
+                       });
+    parser.addHelpOption();
+    parser.process(app);
+
+    hostName = parser.value("host").isEmpty()
+                   ? QHostAddress::Any
+                   : QHostAddress(QString::fromStdString(parser.value("host").toStdString()));
+
+    tcpServer.listen(hostName, portArg);
     server.bind(&tcpServer);
 }

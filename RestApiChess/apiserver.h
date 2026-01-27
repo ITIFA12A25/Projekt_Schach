@@ -25,6 +25,8 @@ using namespace std;
 #include "UserService.h"
 #include "MoveValidator.h"
 #include "Player.h"
+#include "Persistence.h"
+#include "GameStatusUtils.h"
 
 #define SCHEME "http"
 #define HOST "127.0.0.1"
@@ -69,12 +71,13 @@ private:
                        );
     void registerSchema(const QString &name, const QJsonObject &schema);
     void getServerPort(QCoreApplication &app);
-    void setServer();
+    void setServer(QCoreApplication &app);
 
     QHttpServer server;
     QTcpServer tcpServer;
     QCommandLineParser parser;
     quint16 portArg = 0;
+    QHostAddress hostName = QHostAddress::Any;
 
     QList<ApiRoute> routeList;
     QList<ApiSchema> schemaList;
@@ -83,7 +86,5 @@ private:
     GameRepository *gameRepo = GameRepository::getInstance();
     UserService *userService = UserService::getInstance();
     MoveValidator moveValidator;
-    // For demo: simple in-memory players
-    QMap<int, Player*> players;
 };
 #endif // APISERVER_H
