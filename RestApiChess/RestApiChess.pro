@@ -37,6 +37,7 @@ HEADERS += \
     Game.h \
     GameRepository.h \
     GameStatus.h \
+    GameStatusUtils.h \
     King.h \
     Knight.h \
     MatchmakingService.h \
