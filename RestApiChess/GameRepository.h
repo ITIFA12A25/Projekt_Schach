@@ -4,6 +4,7 @@
 #include "Game.h"
 #include "Player.h"
 #include "Persistence.h"
+#include "UserService.h"
 #include <QList>
 #include <QString>
 
@@ -17,12 +18,14 @@ public:
     void loadAll(const QList<Player*> &players);
 
     QList<const Game*> gamesForPlayer(int playerId) const;
-    const Game *getGame(int gameId) const;
+    Game *getGame(int gameId) const;
     QList<Game*> &allGames() { return games; }
+    int newGameId();
 
 private:
     static GameRepository *instance;
     Persistence *persistance = Persistence::getInstance();
+    UserService *userService = UserService::getInstance();
     QList<Game*> games;
 };
 
