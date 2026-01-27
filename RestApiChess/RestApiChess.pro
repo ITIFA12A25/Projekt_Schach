@@ -13,14 +13,21 @@ SOURCES += \
         Board.cpp \
         Game.cpp \
         GameRepository.cpp \
+        GameRoutes.cpp \
         King.cpp \
         Knight.cpp \
+        MatchmakingRoutes.cpp \
         MatchmakingService.cpp \
+        OpenApiRoutes.cpp \
         Pawn.cpp \
         Persistence.cpp \
         Player.cpp \
+        PlayerRoutes.cpp \
         Queen.cpp \
         Rook.cpp \
+        RouteRegistrar.cpp \
+        SchemaRegistry.cpp \
+        SystemRoutes.cpp \
         UserService.cpp \
         apiserver.cpp \
         main.cpp
@@ -31,25 +38,33 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 HEADERS += \
+    ApiRoute.h \
     Bishop.h \
     Board.h \
     Cell.h \
     Game.h \
     GameRepository.h \
+    GameRoutes.h \
     GameStatus.h \
     GameStatusUtils.h \
     King.h \
     Knight.h \
+    MatchmakingRoutes.h \
     MatchmakingService.h \
     Move.h \
     MoveValidator.h \
+    OpenApiRoutes.h \
     Pawn.h \
     Persistence.h \
     Piece.h \
     Player.h \
+    PlayerRoutes.h \
     Position.h \
     Queen.h \
     Rook.h \
+    RouteRegistrar.h \
+    SchemaRegistry.h \
+    SystemRoutes.h \
     UserService.h \
     apiserver.h
 
