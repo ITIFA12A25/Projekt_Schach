@@ -41,8 +41,8 @@ QList<const Game*> GameRepository::gamesForPlayer(int playerId) const
 {
     QList<const Game*> result;
     for (Game *g : games) {
-        if (g->firstPlayer()->getId() == playerId ||
-            g->secondPlayer()->getId() == playerId)
+        if (g->getFirstPlayer()->getId() == playerId ||
+            g->getSecondPlayer()->getId() == playerId)
         {
             result.append(g);
         }
@@ -53,7 +53,7 @@ QList<const Game*> GameRepository::gamesForPlayer(int playerId) const
 Game *GameRepository::getGame(int gameId) const
 {
     for (Game *g : games) {
-        if (g->id() == gameId)
+        if (g->getGameId() == gameId)
             return g;
     }
     return nullptr;
@@ -66,8 +66,8 @@ int GameRepository::newGameId() {
     int maxId = 0;
 
     for (const Game* g : games) {
-        if (g && g->id() > maxId) {
-            maxId = g->id();
+        if (g && g->getGameId() > maxId) {
+            maxId = g->getGameId();
         }
     }
 

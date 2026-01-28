@@ -39,30 +39,6 @@ void ApiServer::Start(QCoreApplication &app) {
     // Persistence::savePlayers(playerVec, "players.json");
 }
 
-void ApiServer::registerRoute(
-    const HttpMethod &method,
-    const QString &path,
-    const QString &description,
-    std::function<QHttpServerResponse(const QHttpServerRequest&)> handler,
-    const QString &requestSchema,
-    const QString &responseSchema,
-    const QList<ApiQueryParam> &queryParams
-    ) {
-
-    ApiRoute route{
-        method,
-        path,
-        description,
-        handler,
-        requestSchema,
-        responseSchema,
-        queryParams,
-    };
-
-    router->addRoute(route);
-}
-
-
 void ApiServer::setupRoutes() {
     for (ApiRoute route : gameRoutes->registerRoutes()){
         router->addRoute(route);

@@ -10,7 +10,6 @@
 
 class MatchmakingService {
 public:
-    MatchmakingService();
     static MatchmakingService *getInstance(void);
 
     Game *enqueuePlayer(Player *player);
@@ -23,7 +22,6 @@ private:
     GameRepository *gameRepo = GameRepository::getInstance();
     UserService *userService = UserService::getInstance();
     QQueue<Player*> waiting;
-    QMap<int, Game*> games;
     int nextGameId = 1;
 };
 

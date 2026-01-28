@@ -56,17 +56,17 @@ QHttpServerResponse GameRoutes::listGames(const QHttpServerRequest &req) {
 
     for (auto g : games) {
         QJsonObject o;
-        o["gameId"] = g->id();
-        o["status"] = (int)g->status();
-        o["statusText"] = gameStatusToString(g->status());
-        o["firstPlayerId"] = g->firstPlayer()->getId();
-        o["secondPlayerId"] = g->secondPlayer()->getId();
+        o["gameId"] = g->getGameId();
+        o["status"] = (int)g->getStatus();
+        o["statusText"] = gameStatusToString(g->getStatus());
+        o["firstPlayerId"] = g->getFirstPlayer()->getId();
+        o["secondPlayerId"] = g->getSecondPlayer()->getId();
         o["firstPlayersTurn"] = g->isFirstPlayersTurn();
-        o["moveCount"] = g->moves().size();
-        o["isFinished"] = (g->status() != GameStatus::InProgress);
+        o["moveCount"] = g->getMoves().size();
+        o["isFinished"] = (g->getStatus() != GameStatus::InProgress);
 
         QJsonArray moves;
-        for (const auto &m : g->moves()) {
+        for (const auto &m : g->getMoves()) {
             QJsonObject mo;
             mo["fromX"] = m.from.x;
             mo["fromY"] = m.from.y;
@@ -107,7 +107,7 @@ QHttpServerResponse GameRoutes::replay(const QHttpServerRequest &req) {
     }
 
     QJsonArray movesArr;
-    for (const auto &m : game->moves()) {
+    for (const auto &m : game->getMoves()) {
         QJsonObject o;
         o["fromX"] = m.from.x;
         o["fromY"] = m.from.y;
@@ -119,7 +119,7 @@ QHttpServerResponse GameRoutes::replay(const QHttpServerRequest &req) {
     }
 
     QJsonObject root;
-    root["gameId"] = game->id();
+    root["gameId"] = game->getGameId();
     root["moves"] = movesArr;
 
     return QHttpServerResponse("application/json",
@@ -150,8 +150,8 @@ QHttpServerResponse GameRoutes::registerGame(const QHttpServerRequest &req) {
 
     int nextId = 1;
     for (auto g : gameRepo->allGames()) {
-        if (g->id() >= nextId)
-            nextId = g->id() + 1;
+        if (g->getGameId() >= nextId)
+            nextId = g->getGameId() + 1;
     }
 
     Game *game = new Game(nextId, p1, p2);
@@ -159,10 +159,10 @@ QHttpServerResponse GameRoutes::registerGame(const QHttpServerRequest &req) {
     gameRepo->saveAll();
 
     QJsonObject resp;
-    resp["gameId"] = game->id();
+    resp["gameId"] = game->getGameId();
     resp["firstPlayerId"] = firstPlayerId;
     resp["secondPlayerId"] = secondPlayerId;
-    resp["status"] = (int)game->status();
+    resp["status"] = (int)game->getStatus();
 
     return QHttpServerResponse("application/json",
                                QJsonDocument(resp).toJson());
@@ -189,8 +189,8 @@ QHttpServerResponse GameRoutes::move(const QHttpServerRequest &req) {
                                    QHttpServerResponse::StatusCode::NotFound);
     }
 
-    if (playerId != game->firstPlayer()->getId() &&
-        playerId != game->secondPlayer()->getId()) {
+    if (playerId != game->getFirstPlayer()->getId() &&
+        playerId != game->getSecondPlayer()->getId()) {
         return QHttpServerResponse("application/json",
                                    R"({"error":"Player not part of this game"})",
                                    QHttpServerResponse::StatusCode::BadRequest);
@@ -198,8 +198,8 @@ QHttpServerResponse GameRoutes::move(const QHttpServerRequest &req) {
 
     bool isFirstPlayersTurn = game->isFirstPlayersTurn();
     int expectedPlayerId = isFirstPlayersTurn
-                               ? game->firstPlayer()->getId()
-                               : game->secondPlayer()->getId();
+                               ? game->getFirstPlayer()->getId()
+                               : game->getSecondPlayer()->getId();
 
     if (playerId != expectedPlayerId) {
         return QHttpServerResponse("application/json",
@@ -227,8 +227,8 @@ QHttpServerResponse GameRoutes::move(const QHttpServerRequest &req) {
 
     gameRepo->saveAll();
 
-    resp["status"] = (int)game->status();
-    resp["statusText"] = gameStatusToString(game->status());
+    resp["status"] = (int)game->getStatus();
+    resp["statusText"] = gameStatusToString(game->getStatus());
 
     return QHttpServerResponse("application/json",
                                QJsonDocument(resp).toJson());

@@ -3,10 +3,6 @@
 
 MatchmakingService* MatchmakingService::instance = nullptr;
 
-MatchmakingService::MatchmakingService(){
-
-}
-
 MatchmakingService* MatchmakingService::getInstance()
 {
     if ( instance == nullptr )

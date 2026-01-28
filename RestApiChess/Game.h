@@ -5,22 +5,22 @@
 #include "GameStatus.h"
 #include "Move.h"
 #include "Player.h"
-#include <QVector>
+#include <QList>
 
 class Game {
 public:
     Game(int id, Player *p1, Player *p2);
 
-    int id() const { return gameId; }
-    const Board &board() const { return gameBoard; }
-    Board &board() { return gameBoard; }
+    int getGameId() const { return gameId; }
+    const Board &getBoard() const { return gameBoard; }
+    Board &getBoard() { return gameBoard; }
 
-    Player *firstPlayer() const { return first; }
-    Player *secondPlayer() const { return second; }
+    Player *getFirstPlayer() const { return first; }
+    Player *getSecondPlayer() const { return second; }
 
     bool isFirstPlayersTurn() const { return firstTurn; }
-    GameStatus status() const { return gameStatus; }
-    const QVector<Move> &moves() const { return gameMoves; }
+    GameStatus getStatus() const { return gameStatus; }
+    const QList<Move> &getMoves() const { return gameMoves; }
 
     bool applyMove(const Move &move, QString &error);
     void setResult(GameStatus status);
@@ -32,7 +32,7 @@ private:
     Player *second;
     bool firstTurn = true;
     GameStatus gameStatus = GameStatus::InProgress;
-    QVector<Move> gameMoves;
+    QList<Move> gameMoves;
 };
 
 #endif // GAME_H

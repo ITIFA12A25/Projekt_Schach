@@ -57,13 +57,13 @@ bool Persistence::saveGames(const QList<Game*> &games, const QString &filePath)
 
     for (auto g : games) {
         QJsonObject o;
-        o["id"] = g->id();
-        o["firstPlayerId"] = g->firstPlayer()->getId();
-        o["secondPlayerId"] = g->secondPlayer()->getId();
-        o["status"] = (int)g->status();
+        o["id"] = g->getGameId();
+        o["firstPlayerId"] = g->getFirstPlayer()->getId();
+        o["secondPlayerId"] = g->getSecondPlayer()->getId();
+        o["status"] = (int)g->getStatus();
 
         QJsonArray movesArr;
-        for (const Move &m : g->moves()) {
+        for (const Move &m : g->getMoves()) {
             QJsonObject mo;
             mo["fromX"] = m.from.x;
             mo["fromY"] = m.from.y;

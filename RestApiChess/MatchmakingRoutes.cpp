@@ -40,9 +40,9 @@ QHttpServerResponse MatchmakingRoutes::matchPlayers(const QHttpServerRequest &re
 
     QJsonObject json;
     json["status"] = gameStatusToString(GameStatus::InProgress);
-    json["gameId"] = game->id();
-    json["whitePlayerId"] = game->firstPlayer()->getId();
-    json["blackPlayerId"] = game->secondPlayer()->getId();
+    json["gameId"] = game->getGameId();
+    json["whitePlayerId"] = game->getFirstPlayer()->getId();
+    json["blackPlayerId"] = game->getSecondPlayer()->getId();
 
     return QHttpServerResponse("application/json", QJsonDocument(json).toJson());
 }
