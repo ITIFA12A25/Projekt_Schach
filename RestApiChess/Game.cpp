@@ -1,16 +1,18 @@
 #include "Game.h"
 
 Game::Game(int id, Player *p1, Player *p2)
-    : gameId(id), first(p1), second(p2) {}
+    : gameId(id), first(p1), second(p2) {
+    coleredPlayers.insert(first, true);
+    coleredPlayers.insert(second, false);
+}
 
-bool Game::applyMove(const Move &move, QString &error) {
+bool Game::applyMove(Move *move, QString &error) {
     if (gameStatus != GameStatus::InProgress) {
         error = "Game is not in progress";
         return false;
     }
 
-    bool whiteToMove = firstTurn ? first->isWhite() : second->isWhite();
-    if (!gameBoard.isMoveLegal(move, whiteToMove)) {
+    if (!gameBoard.isMoveLegal(move, coleredPlayers.constFind(move->player).value())) {
         error = "Illegal move";
         return false;
     }

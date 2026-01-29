@@ -113,8 +113,8 @@ void ApiServer::setupSchemas(){
                                               {"properties", QJsonObject{
                                                                  {"status", QJsonObject{{"type", "string"}}},
                                                                  {"gameId", QJsonObject{{"type", "integer"}}},
-                                                                 {"whitePlayerId", QJsonObject{{"type", "integer"}}},
-                                                                 {"blackPlayerId", QJsonObject{{"type", "integer"}}}
+                                                                 {"firstPlayerId", QJsonObject{{"type", "integer"}}},
+                                                                 {"secondPlayerId", QJsonObject{{"type", "integer"}}}
                                                              }}
                                           });
 

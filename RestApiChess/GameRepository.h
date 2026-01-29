@@ -18,7 +18,7 @@ public:
     void loadAll(const QList<Player*> &players);
 
     QList<const Game*> gamesForPlayer(int playerId) const;
-    Game *getGame(int gameId) const;
+    Game *getGame(int gameId);
     QList<Game*> &allGames() { return games; }
     int newGameId();
 

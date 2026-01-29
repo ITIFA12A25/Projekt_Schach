@@ -2,10 +2,12 @@
 #define MOVE_H
 
 #include "Position.h"
+#include "Player.h"
 
 struct Move {
-    Position from;
-    Position to;
+    Player *player = nullptr;
+    Position *from = nullptr;
+    Position *to = nullptr;
     bool resign = false;
     bool drawOffer = false;
 };

@@ -17,7 +17,7 @@ QList<Player*> UserService::getPlayers(){
     return players;
 }
 
-Player* UserService::getPlayer(QString &playerName){
+Player* UserService::getPlayer(QString playerName){
     QList<Player*> players;
     Player* searchPlayer = nullptr;
     players = getPlayers();
@@ -29,7 +29,7 @@ Player* UserService::getPlayer(QString &playerName){
     return searchPlayer;
 }
 
-Player* UserService::getPlayer(int &playerId){
+Player* UserService::getPlayer(int playerId){
     QList<Player*> players;
     Player* searchPlayer = nullptr;
     players = getPlayers();

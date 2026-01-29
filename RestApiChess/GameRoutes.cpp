@@ -68,12 +68,12 @@ QHttpServerResponse GameRoutes::listGames(const QHttpServerRequest &req) {
         QJsonArray moves;
         for (const auto &m : g->getMoves()) {
             QJsonObject mo;
-            mo["fromX"] = m.from.x;
-            mo["fromY"] = m.from.y;
-            mo["toX"] = m.to.x;
-            mo["toY"] = m.to.y;
-            mo["resign"] = m.resign;
-            mo["drawOffer"] = m.drawOffer;
+            mo["fromX"] = m->from->x;
+            mo["fromY"] = m->from->y;
+            mo["toX"] = m->to->x;
+            mo["toY"] = m->to->y;
+            mo["resign"] = m->resign;
+            mo["drawOffer"] = m->drawOffer;
             moves.append(mo);
         }
         o["moves"] = moves;
@@ -109,12 +109,12 @@ QHttpServerResponse GameRoutes::replay(const QHttpServerRequest &req) {
     QJsonArray movesArr;
     for (const auto &m : game->getMoves()) {
         QJsonObject o;
-        o["fromX"] = m.from.x;
-        o["fromY"] = m.from.y;
-        o["toX"] = m.to.x;
-        o["toY"] = m.to.y;
-        o["resign"] = m.resign;
-        o["drawOffer"] = m.drawOffer;
+        o["fromX"] = m->from->x;
+        o["fromY"] = m->from->y;
+        o["toX"] = m->to->x;
+        o["toY"] = m->to->y;
+        o["resign"] = m->resign;
+        o["drawOffer"] = m->drawOffer;
         movesArr.append(o);
     }
 
@@ -178,8 +178,8 @@ QHttpServerResponse GameRoutes::move(const QHttpServerRequest &req) {
     }
 
     QJsonObject o = doc.object();
-    int gameId = o["gameId"].toInt();
-    int playerId = o["playerId"].toInt();
+    int gameId = o.find("gameId").value().toInt();
+    int playerId = o.find("playerId").value().toInt();
 
     gameRepo->loadAll(userService->getPlayers());
     Game *game = gameRepo->getGame(gameId);
@@ -207,11 +207,14 @@ QHttpServerResponse GameRoutes::move(const QHttpServerRequest &req) {
                                    QHttpServerResponse::StatusCode::BadRequest);
     }
 
-    Move move;
-    move.from = { o["fromX"].toInt(), o["fromY"].toInt() };
-    move.to   = { o["toX"].toInt(),   o["toY"].toInt() };
-    move.resign = o["resign"].toBool(false);
-    move.drawOffer = o["drawOffer"].toBool(false);
+    Move *move = nullptr;
+    move->player = userService->getPlayer(playerId);
+    move->from->x = o["fromX"].toInt();
+    move->from->y = o["fromY"].toInt();
+    move->to->x = o["toX"].toInt();
+    move->to->y = o["toY"].toInt();
+    move->resign = o["resign"].toBool(false);
+    move->drawOffer = o["drawOffer"].toBool(false);
 
     QString error;
     bool ok = validator->validateAndApply(*game, move, error);

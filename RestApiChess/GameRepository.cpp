@@ -50,8 +50,9 @@ QList<const Game*> GameRepository::gamesForPlayer(int playerId) const
     return result;
 }
 
-Game *GameRepository::getGame(int gameId) const
+Game *GameRepository::getGame(int gameId)
 {
+    persistance->loadGames(games, userService->getPlayers(), "games.json");
     for (Game *g : games) {
         if (g->getGameId() == gameId)
             return g;
@@ -60,7 +61,6 @@ Game *GameRepository::getGame(int gameId) const
 }
 
 int GameRepository::newGameId() {
-    QList<Game*> games;
     persistance->loadGames(games, userService->getPlayers(), "games.json");
 
     int maxId = 0;

@@ -6,7 +6,7 @@
 
 class MoveValidator {
 public:
-    bool validateAndApply(Game &game, const Move &move, QString &error) {
+    bool validateAndApply(Game &game, Move *move, QString &error) {
         return game.applyMove(move, error);
     }
 };

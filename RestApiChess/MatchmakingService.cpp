@@ -13,12 +13,9 @@ MatchmakingService* MatchmakingService::getInstance()
 Game *MatchmakingService::enqueuePlayer(Player *player) {
     if (!waiting.isEmpty()) {
         Player *other = waiting.dequeue();
-        // assign colors arbitrarily
-        Player *white = player;
-        Player *black = other;
 
         int id = gameRepo->newGameId();
-        Game *game = new Game(id, white, black);
+        Game *game = new Game(id, player, other);
 
         gameRepo->loadAll(userService->getPlayers());
         gameRepo->addGame(game);

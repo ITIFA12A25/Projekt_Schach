@@ -32,7 +32,6 @@ QHttpServerResponse PlayerRoutes::registerPlayer(const QHttpServerRequest &req) 
     QJsonObject resp;
     resp["id"] = created->getId();
     resp["name"] = created->getName();
-    resp["white"] = created->isWhite();
 
     return QHttpServerResponse("application/json",
                                QJsonDocument(resp).toJson());

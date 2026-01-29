@@ -18,7 +18,6 @@ bool Persistence::savePlayers(const QList<Player*> &players, const QString &file
         QJsonObject o;
         o["id"] = p->getId();
         o["name"] = p->getName();
-        o["white"] = p->isWhite();
         arr.append(o);
     }
 
@@ -63,14 +62,15 @@ bool Persistence::saveGames(const QList<Game*> &games, const QString &filePath)
         o["status"] = (int)g->getStatus();
 
         QJsonArray movesArr;
-        for (const Move &m : g->getMoves()) {
+        for (Move *m : g->getMoves()) {
             QJsonObject mo;
-            mo["fromX"] = m.from.x;
-            mo["fromY"] = m.from.y;
-            mo["toX"] = m.to.x;
-            mo["toY"] = m.to.y;
-            mo["resign"] = m.resign;
-            mo["drawOffer"] = m.drawOffer;
+            mo["playerId"] = m->player->getId();
+            mo["fromX"] = m->from->x;
+            mo["fromY"] = m->from->y;
+            mo["toX"] = m->to->x;
+            mo["toY"] = m->to->y;
+            mo["resign"] = m->resign;
+            mo["drawOffer"] = m->drawOffer;
             movesArr.append(mo);
         }
         o["moves"] = movesArr;
@@ -112,11 +112,14 @@ bool Persistence::loadGames(QList<Game*> &games, const QList<Player*> &players, 
         QJsonArray movesArr = o["moves"].toArray();
         for (auto mv : movesArr) {
             QJsonObject mo = mv.toObject();
-            Move m;
-            m.from = { mo["fromX"].toInt(), mo["fromY"].toInt() };
-            m.to   = { mo["toX"].toInt(),   mo["toY"].toInt() };
-            m.resign = mo["resign"].toBool();
-            m.drawOffer = mo["drawOffer"].toBool();
+            Move *m = nullptr;
+            m->player = findPlayer(mo["playerId"].toInt(), players);
+            m->from->x = mo["fromX"].toInt();
+            m->from->y = mo["fromY"].toInt();
+            m->to->x = mo["toX"].toInt();
+            m->to->y = mo["toY"].toInt();
+            m->resign = mo["resign"].toBool();
+            m->drawOffer = mo["drawOffer"].toBool();
 
             // still need applyMoveUnsafe() or similar
             QString err;

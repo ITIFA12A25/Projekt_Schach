@@ -7,7 +7,7 @@
 class King : public Piece {
 public:
     King(bool white) : Piece(white, Rank::King) {}
-    bool canMove(const Board &board, Position from, Position to) const override;
+    bool canMove(const Board &board, Position *from, Position *to) const override;
 };
 
 #endif // KING_H
