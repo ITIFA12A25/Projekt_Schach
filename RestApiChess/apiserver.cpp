@@ -40,19 +40,19 @@ void ApiServer::Start(QCoreApplication &app) {
 }
 
 void ApiServer::setupRoutes() {
-    for (ApiRoute route : gameRoutes->registerRoutes()){
+    for (ApiRoute &route : gameRoutes->registerRoutes()){
         router->addRoute(route);
     }
-    for (ApiRoute route : playerRoutes->registerRoutes()){
+    for (ApiRoute &route : playerRoutes->registerRoutes()){
         router->addRoute(route);
     }
-    for (ApiRoute route : mmRoutes->registerRoutes()){
+    for (ApiRoute &route : mmRoutes->registerRoutes()){
             router->addRoute(route);
     }
-    for (ApiRoute route : sysRoutes->registerRoutes()){
+    for (ApiRoute &route : sysRoutes->registerRoutes()){
         router->addRoute(route);
     }
-    for (ApiRoute route : openApiRoutes->registerRoutes()){
+    for (ApiRoute &route : openApiRoutes->registerRoutes()){
         router->addRoute(route);
     }
 }
@@ -204,6 +204,34 @@ void ApiServer::setupSchemas(){
                                                               }},
                                                {"required", QJsonArray{"gameId","firstPlayerId","secondPlayerId","status"}}
                                            });
+    schemaReg->registerSchema("GameBoardStateResponse", QJsonObject{
+                                {"type", "object"},
+                                {"properties", QJsonObject{
+                                    {"gameId", QJsonObject{{"type","integer"}}},
+                                    {"firstPlayersTurn", QJsonObject{{"type","boolean"}}},
+                                    {"status", QJsonObject{{"type","integer"}}},
+                                    {"statusText", QJsonObject{{"type","string"}}},
+                                    {"board", QJsonObject{
+                                        {"type","array"},
+                                        {"items", QJsonObject{
+                                            {"type","array"},
+                                            {"items", QJsonObject{
+                                                {"oneOf", QJsonArray{
+                                                    QJsonObject{{"type","null"}},
+                                                    QJsonObject{
+                                                        {"type","object"},
+                                                        {"properties", QJsonObject{
+                                                            {"type", QJsonObject{{"type","string"}}},
+                                                            {"white", QJsonObject{{"type","boolean"}}}
+                                                        }}
+                                                    }
+                                                }}
+                                            }}
+                                        }}
+                                    }}
+                                }}
+                            });
+
 }
 
 void ApiServer::getServerPort(QCoreApplication &app) {
