@@ -61,6 +61,7 @@ HEADERS += \
     PlayerRoutes.h \
     Position.h \
     Queen.h \
+    RankUtil.h \
     Rook.h \
     RouteRegistrar.h \
     SchemaRegistry.h \
