@@ -7,6 +7,13 @@ using namespace std;
 #include "Move.h"
 #include "Player.h"
 #include <array>
+#include "Bishop.h"
+#include "King.h"
+#include "Knight.h"
+#include "Pawn.h"
+#include "Piece.h"
+#include "Queen.h"
+#include "Rook.h"
 
 class Board {
 public:

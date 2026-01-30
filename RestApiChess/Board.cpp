@@ -1,5 +1,4 @@
 #include "Board.h"
-#include "Piece.h"
 
 Board::Board() {
     // init positions
@@ -35,5 +34,32 @@ bool Board::isMoveLegal(const Move *move, bool playerColor) const {
 }
 
 void Board::setupInitialPosition() {
-    // TODO: place pieces
+    // Place pawns
+    for (int x = 0; x < 8; ++x) {
+        cells[1][x].piece = new Pawn(false);
+        // Black pawns
+        cells[6][x].piece = new Pawn(true);
+        // White pawns
+    }
+    // Place rooks
+    cells[0][0].piece = new Rook(false);
+    cells[0][7].piece = new Rook(false);
+    cells[7][0].piece = new Rook(true);
+    cells[7][7].piece = new Rook(true);
+    // Place knights
+    cells[0][1].piece = new Knight(false);
+    cells[0][6].piece = new Knight(false);
+    cells[7][1].piece = new Knight(true);
+    cells[7][6].piece = new Knight(true);
+    // Place bishops
+    cells[0][2].piece = new Bishop(false);
+    cells[0][5].piece = new Bishop(false);
+    cells[7][2].piece = new Bishop(true);
+    cells[7][5].piece = new Bishop(true);
+    // Place queens
+    cells[0][3].piece = new Queen(false);
+    cells[7][3].piece = new Queen(true);
+    // Place kings
+    cells[0][4].piece = new King(false);
+    cells[7][4].piece = new King(true);
 }
