@@ -11,13 +11,21 @@ bool Game::applyMove(Move *move, QString &error) {
         error = "Game is not in progress";
         return false;
     }
+    bool playerColor = false;
+     for (auto it = coleredPlayers.begin(); it != coleredPlayers.end(); ++it)
+    {
+        Player* p = it.key();
+        if (p && p->getId() == move->player->getId()){
+            playerColor = it.value();
+        }
+     }
 
-    if (!gameBoard.isMoveLegal(move, coleredPlayers.constFind(move->player).value())) {
+    if (!gameBoard->isMoveLegal(move, playerColor)) {
         error = "Illegal move";
         return false;
     }
 
-    gameBoard.applyMove(move);
+    gameBoard->applyMove(move);
     gameMoves.append(move);
     firstTurn = !firstTurn;
 
