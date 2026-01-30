@@ -13,8 +13,7 @@ public:
     Game(int id, Player *p1, Player *p2);
 
     int getGameId() const { return gameId; }
-    const Board &getBoard() const { return gameBoard; }
-    Board &getBoard() { return gameBoard; }
+    Board* getBoard()  { return gameBoard; }
     ///
     /// \brief getPlayers
     /// \return Player Address and isWhite bool
@@ -33,7 +32,7 @@ public:
 
 private:
     int gameId = 0;
-    Board gameBoard = *new Board();
+    Board *gameBoard = new Board();
     Player *first = nullptr;
     Player *second = nullptr;
     QMap<Player*, bool> coleredPlayers = *new QMap<Player*, bool>();
