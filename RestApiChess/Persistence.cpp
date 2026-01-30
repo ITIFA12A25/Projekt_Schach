@@ -22,8 +22,11 @@ bool Persistence::savePlayers(const QList<Player*> &players, const QString &file
     }
 
     QFile f(filePath);
-    if (!f.open(QIODevice::WriteOnly))
+
+    if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        qWarning() << "Failed to open file for writing:" << f.errorString();
         return false;
+    }
 
     f.write(QJsonDocument(arr).toJson());
     return true;
@@ -79,8 +82,11 @@ bool Persistence::saveGames(const QList<Game*> &games, const QString &filePath)
     }
 
     QFile f(filePath);
-    if (!f.open(QIODevice::WriteOnly))
+
+    if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        qWarning() << "Failed to open file for writing:" << f.errorString();
         return false;
+    }
 
     f.write(QJsonDocument(arr).toJson());
     return true;
@@ -112,10 +118,12 @@ bool Persistence::loadGames(QList<Game*> &games, const QList<Player*> &players, 
         QJsonArray movesArr = o["moves"].toArray();
         for (auto mv : movesArr) {
             QJsonObject mo = mv.toObject();
-            Move *m = nullptr;
+            Move *m = new Move();
             m->player = findPlayer(mo["playerId"].toInt(), players);
+            m->from = new Position;
             m->from->x = mo["fromX"].toInt();
             m->from->y = mo["fromY"].toInt();
+            m->to = new Position;
             m->to->x = mo["toX"].toInt();
             m->to->y = mo["toY"].toInt();
             m->resign = mo["resign"].toBool();
