@@ -14,6 +14,7 @@
 #include "GameStatusUtils.h"
 #include "UserService.h"
 #include "MoveValidator.h"
+#include "RankUtil.h"
 
 class GameRoutes {
 public:
@@ -30,6 +31,7 @@ private:
     QHttpServerResponse replay(const QHttpServerRequest &req);
     QHttpServerResponse registerGame(const QHttpServerRequest &req);
     QHttpServerResponse move(const QHttpServerRequest &req);
+    QHttpServerResponse boardState(const QHttpServerRequest &req);
 };
 
 

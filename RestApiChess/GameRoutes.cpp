@@ -37,6 +37,14 @@ QList<ApiRoute> GameRoutes::registerRoutes() {
                            , "MoveRequest"
                            , "MoveResponse"
                            , {} });
+    routes.append(ApiRoute{ HttpMethod::Get
+                           , "/api/games/board"
+                           , "Get full board state for a game"
+                           , [this](const QHttpServerRequest &req) { return boardState(req); }
+                           , ""
+                           , "GameBoardStateResponse"
+                           , { {"gameId","integer",true} } });
+
     return routes;
 }
 
@@ -50,7 +58,6 @@ QHttpServerResponse GameRoutes::listGames(const QHttpServerRequest &req) {
                                    QHttpServerResponse::StatusCode::BadRequest);
     }
 
-    gameRepo->loadAll(userService->getPlayers());
     auto games = gameRepo->gamesForPlayer(playerId);
     QJsonArray arr;
 
@@ -178,10 +185,9 @@ QHttpServerResponse GameRoutes::move(const QHttpServerRequest &req) {
     }
 
     QJsonObject o = doc.object();
-    int gameId = o.find("gameId").value().toInt();
-    int playerId = o.find("playerId").value().toInt();
+    int gameId = o.value("gameId").toString().toInt();
+    int playerId = o.value("playerId").toString().toInt();
 
-    gameRepo->loadAll(userService->getPlayers());
     Game *game = gameRepo->getGame(gameId);
     if (!game) {
         return QHttpServerResponse("application/json",
@@ -207,14 +213,59 @@ QHttpServerResponse GameRoutes::move(const QHttpServerRequest &req) {
                                    QHttpServerResponse::StatusCode::BadRequest);
     }
 
-    Move *move = nullptr;
+    QJsonObject errors;
+
+    // Helper for integer fields (positions)
+    auto parseInt = [&](const QString& key, int& outValue) {
+        bool ok = false;
+        outValue = o.value(key).toString().toInt(&ok);
+        if (!ok) {
+            errors.insert(key, "Invalid integer");
+        }
+    };
+
+    // Helper for boolean fields (must be 0 or 1)
+    auto parseBool = [&](const QString& key, bool& outValue) {
+        bool ok = false;
+        int temp = o.value(key).toString().toInt(&ok);
+
+        if (!ok || (temp != 0 && temp != 1)) {
+            errors.insert(key, "Invalid boolean (expected 0 or 1)");
+            return;
+        }
+
+        outValue = (temp == 1);
+    };
+
+    Move* move = new Move;
     move->player = userService->getPlayer(playerId);
-    move->from->x = o["fromX"].toInt();
-    move->from->y = o["fromY"].toInt();
-    move->to->x = o["toX"].toInt();
-    move->to->y = o["toY"].toInt();
-    move->resign = o["resign"].toBool(false);
-    move->drawOffer = o["drawOffer"].toBool(false);
+
+    // Parse positions
+    move->from = new Position;
+    parseInt("fromX", move->from->x);
+    parseInt("fromY", move->from->y);
+
+    move->to = new Position;
+    parseInt("toX", move->to->x);
+    parseInt("toY", move->to->y);
+
+    // Parse booleans
+    parseBool("resign", move->resign);
+    parseBool("drawOffer", move->drawOffer);
+
+    // If any errors occurred, return detailed JSON
+    if (!errors.isEmpty()) {
+        QJsonObject response;
+        response.insert("error", "Invalid JSON fields");
+        response.insert("details", errors);
+
+        QJsonDocument doc(response);
+        return QHttpServerResponse(
+            "application/json",
+            doc.toJson(QJsonDocument::Compact),
+            QHttpServerResponse::StatusCode::BadRequest
+            );
+    }
 
     QString error;
     bool ok = validator->validateAndApply(*game, move, error);
@@ -236,4 +287,67 @@ QHttpServerResponse GameRoutes::move(const QHttpServerRequest &req) {
     return QHttpServerResponse("application/json",
                                QJsonDocument(resp).toJson());
 }
+
+QHttpServerResponse GameRoutes::boardState(const QHttpServerRequest &req) {
+    QUrlQuery q(req.url().query());
+    bool ok = false;
+    int gameId = q.queryItemValue("gameId").toInt(&ok);
+
+    if (!ok) {
+        return QHttpServerResponse("application/json",
+                                   R"({"error":"Game ID missing"})",
+                                   QHttpServerResponse::StatusCode::BadRequest);
+    }
+
+    Game *game = gameRepo->getGame(gameId);
+    if (!game) {
+        return QHttpServerResponse("application/json",
+                                   R"({"error":"Game not found"})",
+                                   QHttpServerResponse::StatusCode::NotFound);
+    }
+
+    const Board *board = game->getBoard();
+    if (!board) {
+        return QHttpServerResponse("application/json",
+                                   R"({"error":"Board not initialized"})",
+                                   QHttpServerResponse::StatusCode::InternalServerError);
+    }
+
+    QJsonArray positions;
+
+    for (int y = 0; y < 8; ++y) {
+        for (int x = 0; x < 8; ++x) {
+            Position *pos = new Position;
+            pos->x = x;
+            pos->y = y;
+            const Cell &c = board->cellAt(pos);
+
+            QJsonObject Jpos;
+            Jpos["x"] = c.pos.x;
+            Jpos["y"] = c.pos.y;
+
+            if (c.piece) {
+                QJsonObject p;
+                p["type"] = rankToString(c.piece->getRank());
+                p["white"] = c.piece->isWhite();
+                Jpos["piece"] = p;
+            } else {
+                Jpos["piece"] = QJsonValue(); // null
+            }
+
+            positions.append(Jpos);
+        }
+    }
+
+    QJsonObject root;
+    root["gameId"] = gameId;
+    root["positions"] = positions;
+    root["firstPlayersTurn"] = game->isFirstPlayersTurn();
+    root["status"] = (int)game->getStatus();
+    root["statusText"] = gameStatusToString(game->getStatus());
+
+    return QHttpServerResponse("application/json",
+                               QJsonDocument(root).toJson());
+}
+
 
