@@ -17,7 +17,6 @@ Game *MatchmakingService::enqueuePlayer(Player *player) {
         int id = gameRepo->newGameId();
         Game *game = new Game(id, player, other);
 
-        gameRepo->loadAll(userService->getPlayers());
         gameRepo->addGame(game);
         gameRepo->saveAll();
 
