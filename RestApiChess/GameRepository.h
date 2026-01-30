@@ -14,19 +14,20 @@ public:
     static GameRepository *getInstance(void);
 
     void addGame(Game *game);
-    void saveAll();
-    void loadAll(const QList<Player*> &players);
 
-    QList<const Game*> gamesForPlayer(int playerId) const;
+    QList<const Game*> gamesForPlayer(int playerId);
     Game *getGame(int gameId);
     QList<Game*> &allGames() { return games; }
+    void saveAll();
     int newGameId();
 
 private:
     static GameRepository *instance;
     Persistence *persistance = Persistence::getInstance();
     UserService *userService = UserService::getInstance();
-    QList<Game*> games;
+    QList<Game*> games = *new QList<Game*>;
+
+    void loadAll(const QList<Player*> &players);
 };
 
 #endif // GAMEREPOSITORY_H

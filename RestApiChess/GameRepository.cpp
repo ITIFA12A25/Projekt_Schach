@@ -13,7 +13,9 @@ GameRepository* GameRepository::getInstance()
 
 void GameRepository::addGame(Game *game)
 {
+    loadAll(userService->getPlayers());
     games.append(game);
+    saveAll();
 }
 
 void GameRepository::saveAll()
@@ -37,8 +39,9 @@ void GameRepository::loadAll(const QList<Player*> &players)
     games = loaded;
 }
 
-QList<const Game*> GameRepository::gamesForPlayer(int playerId) const
+QList<const Game*> GameRepository::gamesForPlayer(int playerId)
 {
+    loadAll(userService->getPlayers());
     QList<const Game*> result;
     for (Game *g : games) {
         if (g->getFirstPlayer()->getId() == playerId ||
@@ -52,7 +55,7 @@ QList<const Game*> GameRepository::gamesForPlayer(int playerId) const
 
 Game *GameRepository::getGame(int gameId)
 {
-    persistance->loadGames(games, userService->getPlayers(), "games.json");
+    loadAll(userService->getPlayers());
     for (Game *g : games) {
         if (g->getGameId() == gameId)
             return g;
@@ -61,7 +64,7 @@ Game *GameRepository::getGame(int gameId)
 }
 
 int GameRepository::newGameId() {
-    persistance->loadGames(games, userService->getPlayers(), "games.json");
+    loadAll(userService->getPlayers());
 
     int maxId = 0;
 
