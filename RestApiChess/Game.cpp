@@ -1,21 +1,31 @@
 #include "Game.h"
 
 Game::Game(int id, Player *p1, Player *p2)
-    : gameId(id), first(p1), second(p2) {}
+    : gameId(id), first(p1), second(p2) {
+    coleredPlayers.insert(first, true);
+    coleredPlayers.insert(second, false);
+}
 
-bool Game::applyMove(const Move &move, QString &error) {
+bool Game::applyMove(Move *move, QString &error) {
     if (gameStatus != GameStatus::InProgress) {
         error = "Game is not in progress";
         return false;
     }
+    bool playerColor = false;
+     for (auto it = coleredPlayers.begin(); it != coleredPlayers.end(); ++it)
+    {
+        Player* p = it.key();
+        if (p && p->getId() == move->player->getId()){
+            playerColor = it.value();
+        }
+     }
 
-    bool whiteToMove = firstTurn ? first->isWhite() : second->isWhite();
-    if (!gameBoard.isMoveLegal(move, whiteToMove)) {
+    if (!gameBoard->isMoveLegal(move, playerColor)) {
         error = "Illegal move";
         return false;
     }
 
-    gameBoard.applyMove(move);
+    gameBoard->applyMove(move);
     gameMoves.append(move);
     firstTurn = !firstTurn;
 

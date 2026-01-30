@@ -5,34 +5,40 @@
 #include "GameStatus.h"
 #include "Move.h"
 #include "Player.h"
-#include <QVector>
+#include <QList>
+#include <QMap>
 
 class Game {
 public:
     Game(int id, Player *p1, Player *p2);
 
-    int id() const { return gameId; }
-    const Board &board() const { return gameBoard; }
-    Board &board() { return gameBoard; }
+    int getGameId() const { return gameId; }
+    Board* getBoard()  { return gameBoard; }
+    ///
+    /// \brief getPlayers
+    /// \return Player Address and isWhite bool
+    ///
+    QMap<Player*, bool> getPlayers(){ return coleredPlayers; };
 
-    Player *firstPlayer() const { return first; }
-    Player *secondPlayer() const { return second; }
+    Player *getFirstPlayer() const { return first; }
+    Player *getSecondPlayer() const { return second; }
 
     bool isFirstPlayersTurn() const { return firstTurn; }
-    GameStatus status() const { return gameStatus; }
-    const QVector<Move> &moves() const { return gameMoves; }
+    GameStatus getStatus() const { return gameStatus; }
+    const QList<Move*> getMoves() const { return gameMoves; }
 
-    bool applyMove(const Move &move, QString &error);
+    bool applyMove(Move *move, QString &error);
     void setResult(GameStatus status);
 
 private:
-    int gameId;
-    Board gameBoard;
-    Player *first;
-    Player *second;
+    int gameId = 0;
+    Board *gameBoard = new Board();
+    Player *first = nullptr;
+    Player *second = nullptr;
+    QMap<Player*, bool> coleredPlayers = *new QMap<Player*, bool>();
     bool firstTurn = true;
     GameStatus gameStatus = GameStatus::InProgress;
-    QVector<Move> gameMoves;
+    QList<Move*> gameMoves = *new QList<Move*>();
 };
 
 #endif // GAME_H

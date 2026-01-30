@@ -39,3 +39,10 @@
 
 # debug information files
 *.dwo
+
+#Exclude Build Folder
+*/build/
+*/.qtcreator/
+
+#Exclude QT User Specific Files
+*.pro.user

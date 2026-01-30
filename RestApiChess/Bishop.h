@@ -7,7 +7,7 @@
 class Bishop : public Piece {
 public:
     Bishop(bool white) : Piece(white, Rank::Bishop) {}
-    bool canMove(const Board &board, Position from, Position to) const override;
+    bool canMove(const Board &board, Position *from, Position *to) const override;
 };
 
 #endif // BISHOP_H

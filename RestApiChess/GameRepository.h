@@ -4,7 +4,8 @@
 #include "Game.h"
 #include "Player.h"
 #include "Persistence.h"
-#include <QVector>
+#include "UserService.h"
+#include <QList>
 #include <QString>
 
 class GameRepository {
@@ -13,17 +14,20 @@ public:
     static GameRepository *getInstance(void);
 
     void addGame(Game *game);
-    void saveAll(const QString &filePath);
-    void loadAll(const QString &filePath, const QVector<Player*> &players);
 
-    QVector<const Game*> gamesForPlayer(int playerId) const;
-    const Game *getGame(int gameId) const;
-    QVector<Game*> &allGames() { return games; }
+    QList<const Game*> gamesForPlayer(int playerId);
+    Game *getGame(int gameId);
+    QList<Game*> &allGames() { return games; }
+    void saveAll();
+    int newGameId();
 
 private:
     static GameRepository *instance;
     Persistence *persistance = Persistence::getInstance();
-    QVector<Game*> games;
+    UserService *userService = UserService::getInstance();
+    QList<Game*> games = *new QList<Game*>;
+
+    void loadAll(const QList<Player*> &players);
 };
 
 #endif // GAMEREPOSITORY_H

@@ -12,10 +12,12 @@ public:
     UserService();
     static UserService *getInstance(void);
 
-    Player* getPlayer(QString &playerName);
+    QList<Player*> getPlayers();
+    Player* getPlayer(QString playerName);
+    Player* getPlayer(int playerId);
     void savePlayer(Player *currentPlayer);
     void deletePlayer(Player *currentPlayer);
-    void registerPlayer(Player *newPlayer);
+    void registerPlayer(QString *playerName);
 
 private:
     static UserService *instance;

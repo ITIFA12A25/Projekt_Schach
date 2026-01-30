@@ -11,10 +11,16 @@ UserService* UserService::getInstance()
     return instance;
 }
 
-Player* UserService::getPlayer(QString &playerName){
+QList<Player*> UserService::getPlayers(){
+    QList<Player*> players;
+    persistence->loadPlayers(players, "players.json");
+    return players;
+}
+
+Player* UserService::getPlayer(QString playerName){
     QList<Player*> players;
     Player* searchPlayer = nullptr;
-    persistence->loadPlayers(players, "players.json");
+    players = getPlayers();
 
     foreach (auto p, players) {
         if(p->getName() == playerName)
@@ -23,9 +29,21 @@ Player* UserService::getPlayer(QString &playerName){
     return searchPlayer;
 }
 
+Player* UserService::getPlayer(int playerId){
+    QList<Player*> players;
+    Player* searchPlayer = nullptr;
+    players = getPlayers();
+
+    foreach (auto p, players) {
+        if(p->getId() == playerId)
+            searchPlayer = p;
+    }
+    return searchPlayer;
+}
+
 void UserService::savePlayer(Player *currentPlayer){
     QList<Player*> players;
-    persistence->loadPlayers(players, "players.json");
+    players = getPlayers();
 
     foreach (auto p, players) {
         if(p->getId() == currentPlayer->getId())
@@ -36,12 +54,29 @@ void UserService::savePlayer(Player *currentPlayer){
 
 void UserService::deletePlayer(Player *currentPlayer){
     QList<Player*> players;
-    persistence->loadPlayers(players, "players.json");
+    players = getPlayers();
 
             players.removeOne(currentPlayer);
     persistence->savePlayers(players,"players.json");
 }
 
-void UserService::registerPlayer(Player *newPlayer){
+void UserService::registerPlayer(QString *playerName)
+{
+    QList<Player*> players;
+    players = getPlayers();
 
+    // Determine next available ID
+    int nextId = 1;
+    for (Player* p : players) {
+        if (p->getId() >= nextId)
+            nextId = p->getId() + 1;
+    }
+
+    // Create new player (default white = false)
+    Player* newPlayer = new Player(nextId, *playerName, false);
+
+    players.append(newPlayer);
+
+    persistence->savePlayers(players, "players.json");
 }
+

@@ -24,66 +24,62 @@ using namespace std;
 #include "GameRepository.h"
 #include "UserService.h"
 #include "MoveValidator.h"
-#include "Player.h"
+#include "ApiRoute.h"
+#include "RouteRegistrar.h"
+#include "SchemaRegistry.h"
+
+#include "MatchmakingRoutes.h"
+#include "GameRoutes.h"
+#include "SystemRoutes.h"
+#include "PlayerRoutes.h"
+#include "OpenApiRoutes.h"
 
 #define SCHEME "http"
 #define HOST "127.0.0.1"
 #define PORT 8080;
-
-struct ApiQueryParam {
-    QString name;
-    QString type; // e.g. "string", "integer"
-    bool required;
-};
-
-struct ApiRoute {
-    QString method;
-    QString path;
-    QString description;
-    QString requestSchema; // name in components/schemas
-    QString responseSchema; // name in components/schemas
-    QList<ApiQueryParam> queryParams;
-};
-
-struct ApiSchema {
-    QString name;
-    QJsonObject schema; // OpenAPI schema object
-};
 
 class ApiServer {
 public:
     ApiServer();
     static ApiServer *getInstance(void);
     void Start(QCoreApplication &app);
+
+    void registerRoute(
+        const HttpMethod &method,
+        const QString &path,
+        const QString &description,
+        std::function<QHttpServerResponse(const QHttpServerRequest&)> handler,
+        const QString &requestSchema,
+        const QString &responseSchema,
+        const QList<ApiQueryParam> &queryParams
+        );
+
 private:
     static ApiServer *instance;
     void setupRoutes();
     void setupSchemas();
-    void registerRoute( const QString &method,
-                       const QString &path,
-                       const QString &description,
-                       function<QHttpServerResponse(const QHttpServerRequest&)> handler,
-                       const QString &requestSchema = {},
-                       const QString &responseSchema = {},
-                       const QList<ApiQueryParam> &queryParams = {}
-                       );
-    void registerSchema(const QString &name, const QJsonObject &schema);
+
     void getServerPort(QCoreApplication &app);
-    void setServer();
+    void setServer(QCoreApplication &app);
 
     QHttpServer server;
     QTcpServer tcpServer;
     QCommandLineParser parser;
     quint16 portArg = 0;
-
-    QList<ApiRoute> routeList;
-    QList<ApiSchema> schemaList;
+    QHostAddress hostName = QHostAddress::Any;
 
     MatchmakingService *matchmaking = MatchmakingService::getInstance();
     GameRepository *gameRepo = GameRepository::getInstance();
     UserService *userService = UserService::getInstance();
+    RouteRegistrar *router = RouteRegistrar::getInstance(server);
+    SchemaRegistry *schemaReg = SchemaRegistry::getInstance();
     MoveValidator moveValidator;
-    // For demo: simple in-memory players
-    QMap<int, Player*> players;
+
+
+    GameRoutes *gameRoutes = new GameRoutes(&moveValidator);
+    PlayerRoutes *playerRoutes = new PlayerRoutes();
+    MatchmakingRoutes *mmRoutes = new MatchmakingRoutes();
+    SystemRoutes *sysRoutes = new SystemRoutes();
+    OpenApiRoutes *openApiRoutes = new OpenApiRoutes(router, schemaReg);
 };
 #endif // APISERVER_H

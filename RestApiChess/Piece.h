@@ -19,7 +19,7 @@ public:
     Piece(bool white, Rank rank) : white(white), rank(rank), killed(false) {}
     virtual ~Piece() = default;
 
-    virtual bool canMove(const Board &board, Position from, Position to) const = 0;
+    virtual bool canMove(const Board &board, Position *from, Position *to) const = 0;
 
     Rank getRank() const { return rank; }
     bool isWhite() const { return white; }
