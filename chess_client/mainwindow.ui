@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect><x>0</x><y>0</y><width>1000</width><height>700</height></rect>
+  </property>
+  <property name="windowTitle">
+   <string>Chess API Client</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayoutRoot">
+    <item>
+     <layout class="QHBoxLayout" name="topLayout">
+
+      <!-- LEFT PANEL -->
+      <item>
+       <layout class="QVBoxLayout" name="leftPanel">
+
+        <!-- PLAYER GROUP -->
+        <item>
+         <widget class="QGroupBox" name="playerGroup">
+          <property name="title"><string>Player</string></property>
+          <layout class="QVBoxLayout">
+           <item>
+            <layout class="QHBoxLayout">
+             <item><widget class="QLabel"><property name="text"><string>Name:</string></property></widget></item>
+             <item><widget class="QLineEdit" name="playerNameEdit"/></item>
+             <item><widget class="QPushButton" name="registerPlayerButton"><property name="text"><string>Register Player</string></property></widget></item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QHBoxLayout">
+             <item><widget class="QLabel"><property name="text"><string>Player ID:</string></property></widget></item>
+             <item><widget class="QLineEdit" name="playerIdEdit"/></item>
+             <item><widget class="QPushButton" name="matchmakingButton"><property name="text"><string>Matchmaking</string></property></widget></item>
+            </layout>
+           </item>
+          </layout>
+         </widget>
+        </item>
+
+        <!-- GAME GROUP -->
+        <item>
+         <widget class="QGroupBox" name="gameGroup">
+          <property name="title"><string>Game</string></property>
+          <layout class="QVBoxLayout">
+           <item>
+            <layout class="QHBoxLayout">
+             <item><widget class="QLabel"><property name="text"><string>First Player ID:</string></property></widget></item>
+             <item><widget class="QLineEdit" name="firstPlayerIdEdit"/></item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QHBoxLayout">
+             <item><widget class="QLabel"><property name="text"><string>Second Player ID:</string></property></widget></item>
+             <item><widget class="QLineEdit" name="secondPlayerIdEdit"/></item>
+             <item><widget class="QPushButton" name="registerGameButton"><property name="text"><string>Register Game</string></property></widget></item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QHBoxLayout">
+             <item><widget class="QLabel"><property name="text"><string>Game ID:</string></property></widget></item>
+             <item><widget class="QLineEdit" name="gameIdEdit"/></item>
+             <item><widget class="QPushButton" name="getBoardButton"><property name="text"><string>Get Board</string></property></widget></item>
+             <item><widget class="QPushButton" name="getReplayButton"><property name="text"><string>Get Replay</string></property></widget></item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QHBoxLayout">
+             <item><widget class="QPushButton" name="getGamesButton"><property name="text"><string>List Games</string></property></widget></item>
+            </layout>
+           </item>
+          </layout>
+         </widget>
+        </item>
+
+        <!-- MOVE GROUP -->
+        <item>
+         <widget class="QGroupBox" name="moveGroup">
+          <property name="title"><string>Move</string></property>
+          <layout class="QVBoxLayout">
+           <item>
+            <layout class="QHBoxLayout">
+             <item><widget class="QLabel"><property name="text"><string>From X:</string></property></widget></item>
+             <item><widget class="QLineEdit" name="fromXEdit"/></item>
+             <item><widget class="QLabel"><property name="text"><string>From Y:</string></property></widget></item>
+             <item><widget class="QLineEdit" name="fromYEdit"/></item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QHBoxLayout">
+             <item><widget class="QLabel"><property name="text"><string>To X:</string></property></widget></item>
+             <item><widget class="QLineEdit" name="toXEdit"/></item>
+             <item><widget class="QLabel"><property name="text"><string>To Y:</string></property></widget></item>
+             <item><widget class="QLineEdit" name="toYEdit"/></item>
+             <item><widget class="QPushButton" name="sendMoveButton"><property name="text"><string>Send Move</string></property></widget></item>
+            </layout>
+           </item>
+          </layout>
+         </widget>
+        </item>
+
+        <item><spacer name="verticalSpacer"><property name="orientation"><enum>Qt::Vertical</enum></property></spacer></item>
+
+       </layout>
+      </item>
+
+      <!-- RIGHT PANEL: BOARD -->
+      <item>
+       <widget class="QWidget" name="chessBoardContainer">
+        <property name="minimumSize">
+         <size><width>400</width><height>400</height></size>
+        </property>
+       </widget>
+      </item>
+
+     </layout>
+    </item>
+
+    <!-- RESPONSE BOX -->
+    <item>
+     <widget class="QTextEdit" name="responseBox">
+      <property name="readOnly"><bool>true</bool></property>
+     </widget>
+    </item>
+
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar"/>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
