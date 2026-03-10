@@ -16,14 +16,14 @@ bool Pawn::canMove(const Board &board, Position *from, Position *to) const {
 
     // double move from starting rank
     if (dx == 0 && dy == 2*dir && !dest.isFilled()) {
-        if ((white && from->y == 6) || (!white && from->y == 1)) {
+        if ((src.piece->isWhite() && from->y == 6) || (!src.piece->isWhite() && from->y == 1)) {
             // naive: not checking intermediate square
             return true;
         }
     }
 
     // capture
-    if (qAbs(dx) == 1 && dy == dir && dest.isFilled() && dest.piece->isWhite() != white) {
+    if (qAbs(dx) == 1 && dy == dir && dest.isFilled() && src.isFilled() && dest.piece->isWhite() != src.piece->isWhite()) {
         return true;
     }
 

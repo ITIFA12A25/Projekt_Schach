@@ -10,6 +10,9 @@ bool Bishop::canMove(const Board &board, Position *from, Position *to) const {
     int stepY = dy > 0 ? 1 : -1;
 
     Position *p = from;
+    const Cell &dest = board.cellAt(to);
+    const Cell &src  = board.cellAt(from);
+
     while (true) {
         p->x += stepX;
         p->y += stepY;
@@ -17,7 +20,6 @@ bool Bishop::canMove(const Board &board, Position *from, Position *to) const {
         if (board.cellAt(p).isFilled()) return false;
     }
 
-    const Cell &dest = board.cellAt(to);
-    if (!dest.isFilled()) return true;
-    return dest.piece->isWhite() != white;
+    if (!dest.isFilled() && src.isFilled()) return true;
+    return dest.isFilled() && src.isFilled() && dest.piece->isWhite() != src.piece->isWhite();
 }
