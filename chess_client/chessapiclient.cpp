@@ -4,11 +4,9 @@
 #include <QNetworkRequest>
 #include <QUrl>
 
-ChessApiClient::ChessApiClient(QObject *parent)
-    : QObject(parent)
+ChessApiClient::ChessApiClient(QObject *parent) : QObject(parent)
 {
-    connect(&manager, &QNetworkAccessManager::finished,
-            this, &ChessApiClient::onReply);
+    connect(&manager, &QNetworkAccessManager::finished, this, &ChessApiClient::onReply);
 }
 
 void ChessApiClient::get(const QString &op, const QString &path, const QUrlQuery &query)
