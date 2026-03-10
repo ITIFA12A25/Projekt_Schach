@@ -31,13 +31,46 @@ textarea {
     width: 100%;
     height: 120px;
 }
-#response {
-    white-space: pre;
+
+/* collapsible sections */
+.collapsible {
+    cursor: pointer;
+    padding: 6px;
+    background: #eee;
+    border-radius: 4px;
+    margin-top: 10px;
+    font-weight: bold;
+}
+.collapsible:hover {
+    background: #ddd;
+}
+.content-collapsible {
+    display: none;
+    padding: 10px 0;
+}
+
+/* boxes */
+.response-box, .request-box {
+    white-space: pre-wrap;
     background: #f5f5f5;
     padding: 10px;
     border: 1px solid #ddd;
-    margin-top: 20px;
+    margin-top: 10px;
 }
+.header-box {
+    white-space: pre-wrap;
+    background: #fafafa;
+    padding: 10px;
+    border: 1px solid #ccc;
+    margin-top: 10px;
+}
+
+/* simple syntax highlighting */
+.hl-key   { color: #aa0d91; font-weight: bold; }
+.hl-str   { color: #008000; }
+.hl-num   { color: #1c00cf; }
+.hl-bool  { color: #aa0d91; }
+.hl-null  { color: #777; font-style: italic; }
 </style>
 </head>
 
@@ -47,13 +80,27 @@ textarea {
 
 <div id="endpoints">Loading endpoints…</div>
 
-<h2>Response</h2>
-<pre id="response">Click an endpoint to test it</pre>
-
 <script>
+/* JSON syntax highlighting */
+function highlightJSON(json) {
+    if (!json) return "";
+    return json
+        .replace(/"(.*?)"(?=\s*:)/g, '<span class="hl-key">"$1"</span>')
+        .replace(/"(.*?)"/g, '<span class="hl-str">"$1"</span>')
+        .replace(/\b(true|false)\b/g, '<span class="hl-bool">$1</span>')
+        .replace(/\b(null)\b/g, '<span class="hl-null">$1</span>')
+        .replace(/\b(\d+)\b/g, '<span class="hl-num">$1</span>');
+}
+
+/* collapsible toggle */
+function toggleCollapse(el) {
+    const content = el.nextElementSibling;
+    content.style.display = content.style.display === "block" ? "none" : "block";
+}
+
+/* load OpenAPI */
 async function loadOpenAPI() {
     const container = document.getElementById("endpoints");
-    const responseBox = document.getElementById("response");
 
     try {
         const res = await fetch("/openapi.json");
@@ -70,10 +117,12 @@ async function loadOpenAPI() {
             for (const method in methods) {
                 const info = methods[method];
 
+                const tryoutId = "tryout_" + Math.random().toString(36).substring(2);
+                const reqId = "req_" + Math.random().toString(36).substring(2);
+                const resId = "res_" + Math.random().toString(36).substring(2);
+
                 const card = document.createElement("div");
                 card.className = "endpoint";
-
-                const tryoutId = "tryout_" + Math.random().toString(36).substring(2);
 
                 card.innerHTML = `
                     <div>
@@ -93,9 +142,30 @@ async function loadOpenAPI() {
                         <h4>Request Body</h4>
                         <textarea class="body-input"></textarea>
 
-                        <button class="tryout-btn" onclick="sendRequest('${method}', '${path}', '${tryoutId}')">
+                        <button class="tryout-btn"
+                            onclick="sendRequest('${method}', '${path}', '${tryoutId}', '${reqId}', '${resId}', '${resId}_headers', '${resId}_status')">
                             Send Request
                         </button>
+
+                        <div class="collapsible" onclick="toggleCollapse(this)">Request Preview</div>
+                        <div class="content-collapsible">
+                            <pre id="${reqId}" class="request-box">No request yet</pre>
+                        </div>
+
+                        <div class="collapsible" onclick="toggleCollapse(this)">Response Status</div>
+                        <div class="content-collapsible">
+                            <pre id="${resId}_status" class="header-box">No response yet</pre>
+                        </div>
+
+                        <div class="collapsible" onclick="toggleCollapse(this)">Response Headers</div>
+                        <div class="content-collapsible">
+                            <pre id="${resId}_headers" class="header-box">No headers yet</pre>
+                        </div>
+
+                        <div class="collapsible" onclick="toggleCollapse(this)">Response Body</div>
+                        <div class="content-collapsible">
+                            <pre id="${resId}" class="response-box">No response yet</pre>
+                        </div>
                     </div>
                 `;
 
@@ -105,7 +175,7 @@ async function loadOpenAPI() {
                 const paramsDiv = tryoutDiv.querySelector(".params");
                 const bodyInput = tryoutDiv.querySelector(".body-input");
 
-                // Query parameters from OpenAPI
+                /* Query parameters */
                 if (info.parameters && info.parameters.length > 0) {
                     info.parameters.forEach(p => {
                         if (p.in === "query") {
@@ -122,22 +192,18 @@ async function loadOpenAPI() {
                     paramsDiv.innerHTML = "<i>No query parameters</i>";
                 }
 
-                // Request body schema
-                if (info.requestBody && info.requestBody.content && info.requestBody.content["application/json"]) {
+                /* Request body example */
+                if (info.requestBody?.content?.["application/json"]) {
                     const schema = info.requestBody.content["application/json"].schema;
                     if (schema["$ref"]) {
                         const schemaName = schema["$ref"].split("/").pop();
                         const s = schemas[schemaName];
-                        if (s && s.properties) {
+                        if (s?.properties) {
                             const example = {};
-                            for (const key in s.properties) {
-                                example[key] = "";
-                            }
+                            for (const key in s.properties) example[key] = "";
                             bodyInput.value = JSON.stringify(example, null, 2);
                         }
                     }
-                } else {
-                    bodyInput.value = "";
                 }
             }
         }
@@ -147,25 +213,26 @@ async function loadOpenAPI() {
 }
 
 function toggleTryout(id) {
-    const el = document.getElementById(id);
-    el.classList.toggle("hidden");
+    document.getElementById(id).classList.toggle("hidden");
 }
 
-async function sendRequest(method, path, tryoutId) {
+/* send request */
+async function sendRequest(method, path, tryoutId, reqId, resId, headersId, statusId) {
     const tryoutDiv = document.getElementById(tryoutId);
-    const responseBox = document.getElementById("response");
+    const reqBox = document.getElementById(reqId);
+    const resBox = document.getElementById(resId);
+    const headersBox = document.getElementById(headersId);
+    const statusBox = document.getElementById(statusId);
 
     const params = tryoutDiv.querySelectorAll("[data-param]");
     let url = path;
 
-    if (params.length > 0) {
-        const q = new URLSearchParams();
-        params.forEach(p => {
-            if (p.value.trim() !== "") q.append(p.dataset.param, p.value);
-        });
-        const qs = q.toString();
-        if (qs) url += "?" + qs;
-    }
+    const q = new URLSearchParams();
+    params.forEach(p => {
+        if (p.value.trim() !== "") q.append(p.dataset.param, p.value);
+    });
+    const qs = q.toString();
+    if (qs) url += "?" + qs;
 
     let body = null;
     const bodyInput = tryoutDiv.querySelector(".body-input");
@@ -173,7 +240,13 @@ async function sendRequest(method, path, tryoutId) {
         body = bodyInput.value;
     }
 
-    responseBox.textContent = "Loading…";
+    reqBox.innerHTML = highlightJSON(
+        method.toUpperCase() + " " + url + "\n\n" + (body || "(no body)")
+    );
+
+    resBox.textContent = "Loading…";
+    headersBox.textContent = "Loading…";
+    statusBox.textContent = "Loading…";
 
     try {
         const res = await fetch(url, {
@@ -182,14 +255,22 @@ async function sendRequest(method, path, tryoutId) {
             body: method.toLowerCase() !== "get" ? body : undefined
         });
 
+        statusBox.textContent = `${res.status} ${res.statusText}`;
+
+        let headerText = "";
+        res.headers.forEach((v, k) => headerText += `${k}: ${v}\n`);
+        headersBox.textContent = headerText.trim();
+
         const text = await res.text();
         try {
-            responseBox.textContent = JSON.stringify(JSON.parse(text), null, 2);
+            const json = JSON.stringify(JSON.parse(text), null, 2);
+            resBox.innerHTML = highlightJSON(json);
         } catch {
-            responseBox.textContent = text;
+            resBox.textContent = text;
         }
+
     } catch (err) {
-        responseBox.textContent = "Error: " + err;
+        resBox.textContent = "Error: " + err;
     }
 }
 

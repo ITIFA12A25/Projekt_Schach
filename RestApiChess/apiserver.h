@@ -1,8 +1,6 @@
 #ifndef APISERVER_H
 #define APISERVER_H
 
-using namespace std;
-
 #pragma once
 #include <QTcpServer>
 #include <QHttpServer>
