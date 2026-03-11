@@ -27,6 +27,7 @@ public:
     bool isFirstPlayersTurn() const { return firstTurn; }
     GameStatus getStatus() const { return gameStatus; }
     const QList<Move*> getMoves() const { return gameMoves; }
+    void setMove(Move* move) { gameMoves.append(move); }
 
     bool applyMove(Move *move, QString &error);
     void setResult(GameStatus status);

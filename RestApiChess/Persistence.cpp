@@ -129,9 +129,8 @@ bool Persistence::loadGames(QList<Game*> &games, const QList<Player*> &players, 
             m->resign = mo["resign"].toBool();
             m->drawOffer = mo["drawOffer"].toBool();
 
-            // still need applyMoveUnsafe() or similar
-            QString err;
-            g->applyMove(m, err);
+            g->getBoard()->applyMove(m);
+            g->setMove(m);
         }
 
         games.append(g);
