@@ -9,7 +9,7 @@ QList<ApiRoute> OpenApiRoutes::registerRoutes() {
     routes.append(ApiRoute{
         HttpMethod::Get,
         "/openapi.json",
-        "OpenAPI 3.0 specification",
+        "Returns the list of all api endpoints",
         [this](const QHttpServerRequest &req) { return getRouting(req); },
         {},
         {},
