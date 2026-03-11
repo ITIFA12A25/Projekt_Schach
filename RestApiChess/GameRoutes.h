@@ -11,6 +11,7 @@
 
 #include "ApiRoute.h"
 #include "GameRepository.h"
+#include "GameStatus.h"
 #include "GameStatusUtils.h"
 #include "UserService.h"
 #include "MoveValidator.h"

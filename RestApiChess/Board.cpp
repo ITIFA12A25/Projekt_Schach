@@ -20,16 +20,18 @@ Cell &Board::cellAt(Position *p) {
 }
 
 void Board::applyMove(const Move *move) {
-    Cell &from = cellAt(move->from);
-    Cell &to = cellAt(move->to);
-    to.piece = from.piece;
-    from.piece = nullptr;
+    Cell &dest =  cells.at(move->to->y).at(move->to->x);
+    Cell &src =  cells.at(move->from->y).at(move->from->x);
+    dest.piece = src.piece;
+    src.piece = nullptr;
 }
 
 bool Board::isMoveLegal(const Move *move, bool playerColor) const {
     const Cell &from = cellAt(move->from);
-    if (!from.piece) return false;
-    if (from.piece->isWhite() != playerColor) return false;
+    if (!from.piece)
+        return false;
+    if (from.piece->isWhite() != playerColor)
+        return false;
     return from.piece->canMove(*this, move->from, move->to);
 }
 

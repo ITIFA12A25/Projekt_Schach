@@ -213,6 +213,15 @@ QHttpServerResponse GameRoutes::move(const QHttpServerRequest &req) {
                                    QHttpServerResponse::StatusCode::BadRequest);
     }
 
+    if (game->getStatus() == GameStatus::FirstPlayerWin ||
+        game->getStatus() == GameStatus::SecondPlayerWin ||
+        game->getStatus() == GameStatus::Draw ||
+        game->getStatus() == GameStatus::Stalemate) {
+        return QHttpServerResponse("application/json",
+                                   R"({"error":"Game has already finished"})",
+                                   QHttpServerResponse::StatusCode::BadRequest);
+    }
+
     QJsonObject errors;
 
     // Helper for integer fields (positions)
@@ -258,7 +267,7 @@ QHttpServerResponse GameRoutes::move(const QHttpServerRequest &req) {
         QJsonObject response;
         response.insert("error", "Invalid JSON fields");
         response.insert("details", errors);
-
+        delete move;
         QJsonDocument doc(response);
         return QHttpServerResponse(
             "application/json",
