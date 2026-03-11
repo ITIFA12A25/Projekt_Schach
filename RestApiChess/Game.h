@@ -5,6 +5,7 @@
 #include "GameStatus.h"
 #include "Move.h"
 #include "Player.h"
+#include "Piece.h"
 #include <QList>
 #include <QMap>
 
