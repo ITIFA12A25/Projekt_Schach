@@ -20,10 +20,8 @@ Cell &Board::cellAt(Position *p) {
 }
 
 void Board::applyMove(const Move *move) {
-    Cell &from = cellAt(move->from);
-    Cell &to = cellAt(move->to);
-    Cell &dest =  cells.at(to.pos.y).at(to.pos.x);
-    Cell &src =  cells.at(from.pos.y).at(from.pos.x);
+    Cell &dest =  cells.at(move->to->y).at(move->to->x);
+    Cell &src =  cells.at(move->from->y).at(move->from->x);
     dest.piece = src.piece;
     src.piece = nullptr;
 }
