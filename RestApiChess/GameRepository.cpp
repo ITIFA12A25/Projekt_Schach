@@ -35,18 +35,20 @@ void GameRepository::saveGame(Game* game){
 
 void GameRepository::loadAll(const QList<Player*> &players)
 {
-    // Clean old games
-    for (auto g : games)
-        delete g;
-    games.clear();
+    if (games.isEmpty()){
+        // Clean old games
+        for (auto g : games)
+            delete g;
+        games.clear();
 
-    QList<Game*> loaded;
-    if (!persistance->loadGames(loaded, players, "games.json")) {
-        qWarning() << "Failed to load games from" << "games.json";
-        return;
+        QList<Game*> loaded;
+        if (!persistance->loadGames(loaded, players, "games.json")) {
+            qWarning() << "Failed to load games from" << "games.json";
+            return;
+        }
+
+        games = loaded;
     }
-
-    games = loaded;
 }
 
 QList<const Game*> GameRepository::gamesForPlayer(int playerId)
