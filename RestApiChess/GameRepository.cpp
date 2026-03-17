@@ -24,7 +24,6 @@ void GameRepository::saveAll()
 }
 
 void GameRepository::saveGame(Game* game){
-    cout << game->isFirstPlayersTurn() << endl;
     for(Game *g : games){
         if (g->getGameId() == game->getGameId()){
             g  = game;
