@@ -201,9 +201,7 @@ QHttpServerResponse GameRoutes::move(const QHttpServerRequest &req) {
                                    R"({"error":"Player not part of this game"})",
                                    QHttpServerResponse::StatusCode::BadRequest);
     }
-
-    bool isFirstPlayersTurn = game->isFirstPlayersTurn();
-    int expectedPlayerId = isFirstPlayersTurn
+    int expectedPlayerId = game->isFirstPlayersTurn()
                                ? game->getFirstPlayer()->getId()
                                : game->getSecondPlayer()->getId();
 
@@ -287,7 +285,7 @@ QHttpServerResponse GameRoutes::move(const QHttpServerRequest &req) {
         return QHttpServerResponse("application/json",
                                    QJsonDocument(resp).toJson());
     }
-
+    gameRepo->saveGame(game);
     gameRepo->saveAll();
 
     resp["status"] = (int)game->getStatus();

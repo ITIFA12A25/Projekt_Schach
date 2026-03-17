@@ -23,20 +23,32 @@ void GameRepository::saveAll()
     persistance->saveGames(games, "games.json");
 }
 
+void GameRepository::saveGame(Game* game){
+    cout << game->isFirstPlayersTurn() << endl;
+    for(Game *g : games){
+        if (g->getGameId() == game->getGameId()){
+            g  = game;
+            break;
+        }
+    }
+}
+
 void GameRepository::loadAll(const QList<Player*> &players)
 {
-    // Clean old games
-    for (auto g : games)
-        delete g;
-    games.clear();
+    if (games.isEmpty()){
+        // Clean old games
+        for (auto g : games)
+            delete g;
+        games.clear();
 
-    QList<Game*> loaded;
-    if (!persistance->loadGames(loaded, players, "games.json")) {
-        qWarning() << "Failed to load games from" << "games.json";
-        return;
+        QList<Game*> loaded;
+        if (!persistance->loadGames(loaded, players, "games.json")) {
+            qWarning() << "Failed to load games from" << "games.json";
+            return;
+        }
+
+        games = loaded;
     }
-
-    games = loaded;
 }
 
 QList<const Game*> GameRepository::gamesForPlayer(int playerId)

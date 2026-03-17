@@ -19,6 +19,7 @@ public:
     Game *getGame(int gameId);
     QList<Game*> &allGames() { return games; }
     void saveAll();
+    void saveGame(Game* game);
     int newGameId();
 
 private:
