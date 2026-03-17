@@ -23,6 +23,16 @@ void GameRepository::saveAll()
     persistance->saveGames(games, "games.json");
 }
 
+void GameRepository::saveGame(Game* game){
+    cout << game->isFirstPlayersTurn() << endl;
+    for(Game *g : games){
+        if (g->getGameId() == game->getGameId()){
+            g  = game;
+            break;
+        }
+    }
+}
+
 void GameRepository::loadAll(const QList<Player*> &players)
 {
     // Clean old games
